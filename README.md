@@ -1,6 +1,14 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/vtrtpjxk08xp6ba6/branch/master?svg=true)](https://ci.appveyor.com/project/10110111/CalcMySky)
 
-# CalcMySky
+# sky-model
+
+## Installation
+
+```bash
+npm install sky-model
+```
+
+## Summary
 
 CalcMySky is a software package that simulates scattering of light by the atmosphere to render daytime and twilight skies (without stars). Its primary purpose is to enable realistic view of the sky in applications such as planetaria. Secondary objective is to make it possible to explore atmospheric effects such as glories, fogbows etc., as well as simulate unusual environments such as on Mars or an exoplanet orbiting a star with a non-solar spectrum of radiation.
 
