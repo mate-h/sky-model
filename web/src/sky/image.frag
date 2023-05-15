@@ -1,5 +1,6 @@
 #include uniforms
 #include common
+#include ray
 
 vec3 getValFromSkyLUT(vec3 rayDir, vec3 sunDir) {
   float height = length(viewPos);
@@ -30,13 +31,6 @@ vec3 getValFromSkyLUT(vec3 rayDir, vec3 sunDir) {
   return texture(iSkyview, uv).rgb;
 }
 
-vec3 jodieReinhardTonemap(vec3 c) {
-    // From: https://www.shadertoy.com/view/tdSXzD
-  float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
-  vec3 tc = c / (c + 1.0);
-  return mix(c / (l + 1.0), tc, tc);
-}
-
 vec3 sunWithBloom(vec3 rayDir, vec3 sunDir) {
   const float sunSolidAngle = 0.53 * PI / 180.0;
   const float minSunCosTheta = cos(sunSolidAngle);
@@ -54,16 +48,9 @@ vec3 sunWithBloom(vec3 rayDir, vec3 sunDir) {
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   vec3 sunDir = getSunDir(iTime);
 
-  vec3 camDir = normalize(vec3(0.0, 0.27, -1.0));
-  float camFOVWidth = PI / 3.5;
-  float camWidthScale = 2.0 * tan(camFOVWidth / 2.0);
-  float camHeightScale = camWidthScale * iResolution.y / iResolution.x;
-
-  vec3 camRight = normalize(cross(camDir, vec3(0.0, 1.0, 0.0)));
-  vec3 camUp = normalize(cross(camRight, camDir));
-
-  vec2 xy = 2.0 * (fragCoord.xy / iResolution.xy) - 1.0;
-  vec3 rayDir = normalize(camDir + camRight * xy.x * camWidthScale + camUp * xy.y * camHeightScale);
+  // determine the ray direction
+  vec3 rayOrigin, rayDir;
+  cameraRay(rayOrigin, rayDir);
 
   vec3 lum = getValFromSkyLUT(rayDir, sunDir);
 
@@ -81,18 +68,14 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   }
   lum += sunLum;
 
-  // Tonemapping and gamma. Super ad-hoc, probably a better way to do this.
+  // Exposure
   lum *= 20.0;
-  lum = pow(lum, vec3(1.3));
-  lum /= (smoothstep(0.0, 0.2, clamp(sunDir.y, 0.0, 1.0)) * 2.0 + 0.15);
-
-  lum = jodieReinhardTonemap(lum);
-
-  lum = pow(lum, vec3(1.0 / 2.2));
 
   fragColor = vec4(lum, 1.0);
 }
 
 void main() {
   mainImage(gl_FragColor, gl_FragCoord.xy);
+
+  #include <tonemapping_fragment>
 }

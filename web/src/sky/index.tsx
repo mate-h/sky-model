@@ -1,8 +1,9 @@
 import { RootState, useFrame, useThree } from '@react-three/fiber'
 import {
+  DirectionalLight,
+  DirectionalLightHelper,
   HalfFloatType,
   IUniform,
-  OrthographicCamera,
   Scene,
   WebGLRenderTarget,
 } from 'three'
@@ -10,9 +11,8 @@ import transmittanceFragment from './transmittance.frag'
 import scatteringFragment from './scattering.frag'
 import skyviewFragment from './skyview.frag'
 import imageFragment from './image.frag'
-import testFrag from './test.frag'
 import { useMemo, useRef } from 'react'
-import { merge } from '../util'
+import { useHelper } from '@react-three/drei'
 
 // glsl template literal
 const glsl = (x: any) => x[0]
@@ -89,16 +89,14 @@ export function Sky() {
       iTime: { value: state.clock.elapsedTime },
     }
   }
-
+  const state = useThree()
+  const uniforms = getUniforms(state)
   useFrame((state) => {
     Object.entries(getUniforms(state)).forEach(([key, value]) => {
       // @ts-ignore
       uniforms[key].value = value.value
     })
   })
-
-  const state = useThree()
-  const uniforms = getUniforms(state)
 
   return (
     <>
@@ -129,6 +127,8 @@ export function Sky() {
           fragmentShader={imageFragment}
         />
       </mesh>
+
+      <gridHelper />
     </>
   )
 }

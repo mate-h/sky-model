@@ -1,7 +1,8 @@
-import { Loader, OrbitControls } from '@react-three/drei'
+import { Loader, OrbitControls, Stats } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Sky } from './sky'
 import { GrassMaterial } from './grass'
+import { Perf } from 'r3f-perf'
 
 export default function () {
   const space = 3
@@ -10,6 +11,7 @@ export default function () {
   return (
     <>
       <Canvas camera={{ fov: 70 }}>
+        <Perf />
         {/* <fog attach="fog" /> */}
         <Sky />
 
@@ -24,7 +26,7 @@ export default function () {
         </mesh>
 
         <mesh position={[getX(2), 0, 0]}>
-          <icosahedronGeometry />
+          <sphereGeometry />
           <GrassMaterial />
         </mesh> */}
 
