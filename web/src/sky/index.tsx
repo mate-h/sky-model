@@ -1,8 +1,6 @@
 import { RootState, useFrame, useThree } from '@react-three/fiber'
 import {
-  FloatType,
   HalfFloatType,
-  NearestFilter,
   RGBAFormat,
   WebGLRenderTarget,
   WebGL3DRenderTarget,
@@ -19,6 +17,7 @@ import { useMemo } from 'react'
 import { ShaderPass } from '../shader/pass'
 import vertexPass from '../shader/pass.vert'
 import { ScreenQuad } from '@react-three/drei'
+import { SunHelper } from './helper'
 
 function useRenderTarget() {
   const opts = {
@@ -64,16 +63,12 @@ export function Sky() {
     depth: 32,
   })
 
-  const xAxis = useMemo(() => new Vector3(1, 0, 0), [])
-  const sunDirection = useMemo(() => new Vector3(0, 1, 0), [])
+  const sunDirection = useMemo(() => new Vector3(0, 0, -1), [])
 
   const getUniforms = (state: RootState) => {
     const w = state.size.width * state.viewport.dpr
     const h = state.size.height * state.viewport.dpr
     const t = state.clock.elapsedTime
-    // rotate the sun around the x axis
-    sunDirection.set(0, 1, 0)
-    sunDirection.applyAxisAngle(xAxis, t * .01 + 4.6)
     
     return {
       iResolution: { value: [w, h, 0] },
@@ -139,6 +134,8 @@ export function Sky() {
           fragmentShader={testFragment}
         />
       </ScreenQuad> */}
+
+      <SunHelper direction={sunDirection} />
 
       <gridHelper />
     </>

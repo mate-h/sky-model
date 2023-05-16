@@ -30,7 +30,7 @@ export default function () {
           <GrassMaterial />
         </mesh> */}
 
-        <OrbitControls />
+        <OrbitControls makeDefault />
       </Canvas>
       <Loader />
     </>
