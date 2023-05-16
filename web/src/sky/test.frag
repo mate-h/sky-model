@@ -6,10 +6,30 @@ void main() {
   vec2 uv = gl_FragCoord.xy / iResolution.xy;
   float w = sin(iTime) * 0.5 + 0.5;
   vec3 uvw = vec3(uv, w);
-
-  gl_FragColor = texture(iAerialPerspective, uvw);
+  
+  // reference values
   vec3 ro, rd;
   cameraRay(ro, rd);
+
+  // texture values
+  vec4 value = texture(iAerialPerspective, uvw);
+  // value = texture(iSkyview, uv);
+  vec3 rdd = value.xyz;
+
+  // determine error
+  float meanSquaredError = 0.0;
+  // compare rd and rdd
+  for (int i = 0; i < 3; i++) {
+    float diff = rd[i] - rdd[i];
+    meanSquaredError += diff * diff;
+  }
+
+  // exxagerate error
+  meanSquaredError *= 200000.0;
   
-  // gl_FragColor = vec4(rd, 1.);
+  // plot error in gl_FragColor
+  // gl_FragColor = vec4(vec3(meanSquaredError), 1.0);
+
+  // plot texture value in gl_FragColor
+  gl_FragColor = value;
 }

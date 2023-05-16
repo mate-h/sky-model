@@ -9,3 +9,4 @@ uniform sampler2D iSkyview;
 uniform sampler3D iAerialPerspective;
 uniform float iTime;
 uniform float iDepth;
+uniform vec3 iSunDirection;

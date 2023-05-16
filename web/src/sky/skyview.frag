@@ -1,53 +1,10 @@
 #include uniforms
 #include common
+#include raymarch
 
 // Buffer C calculates the actual sky-view! It's a lat-long map (or maybe altitude-azimuth is the better term),
 // but the latitude/altitude is non-linear to get more resolution near the horizon.
 const int numScatteringSteps = 32;
-vec3 raymarchScattering(
-  vec3 pos,
-  vec3 rayDir,
-  vec3 sunDir,
-  float tMax,
-  float numSteps
-) {
-  float cosTheta = dot(rayDir, sunDir);
-
-  float miePhaseValue = getMiePhase(cosTheta);
-  float rayleighPhaseValue = getRayleighPhase(-cosTheta);
-
-  vec3 lum = vec3(0.0);
-  vec3 transmittance = vec3(1.0);
-  float t = 0.0;
-  for(float i = 0.0; i < numSteps; i += 1.0) {
-    float newT = ((i + 0.3) / numSteps) * tMax;
-    float dt = newT - t;
-    t = newT;
-
-    vec3 newPos = pos + t * rayDir;
-
-    vec3 rayleighScattering, extinction;
-    float mieScattering;
-    getScatteringValues(newPos, rayleighScattering, mieScattering, extinction);
-
-    vec3 sampleTransmittance = exp(-dt * extinction);
-
-    vec3 sunTransmittance = getValFromTLUT(iTransmittance, iResolution.xy, newPos, sunDir);
-    vec3 psiMS = getValFromMultiScattLUT(iScattering, iResolution.xy, newPos, sunDir);
-
-    vec3 rayleighInScattering = rayleighScattering * (rayleighPhaseValue * sunTransmittance + psiMS);
-    vec3 mieInScattering = mieScattering * (miePhaseValue * sunTransmittance + psiMS);
-    vec3 inScattering = (rayleighInScattering + mieInScattering);
-
-    // Integrated scattering within path segment.
-    vec3 scatteringIntegral = (inScattering - inScattering * sampleTransmittance) / extinction;
-
-    lum += scatteringIntegral * transmittance;
-
-    transmittance *= sampleTransmittance;
-  }
-  return lum;
-}
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   if(fragCoord.x >= (skyLUTRes.x + 1.5) || fragCoord.y >= (skyLUTRes.y + 1.5)) {
@@ -75,14 +32,12 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   float cosAltitude = cos(altitudeAngle);
   vec3 rayDir = vec3(cosAltitude * sin(azimuthAngle), sin(altitudeAngle), -cosAltitude * cos(azimuthAngle));
 
-  float sunAltitude = (0.5 * PI) - acos(dot(getSunDir(iTime), up));
-  vec3 sunDir = vec3(0.0, sin(sunAltitude), -cos(sunAltitude));
-
   float atmoDist = rayIntersectSphere(viewPos, rayDir, atmosphereRadiusMM);
   float groundDist = rayIntersectSphere(viewPos, rayDir, groundRadiusMM);
   float tMax = (groundDist < 0.0) ? atmoDist : groundDist;
-  vec3 lum = raymarchScattering(viewPos, rayDir, sunDir, tMax, float(numScatteringSteps));
-  fragColor = vec4(lum, 1.0);
+  vec3 transmittance, luminance;
+  raymarchScattering(viewPos, rayDir, iSunDirection, tMax, float(numScatteringSteps), transmittance, luminance);
+  fragColor = vec4(luminance, 1.0);
 }
 
 void main() {

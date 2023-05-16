@@ -32,7 +32,7 @@ export function ShaderPass({
       for (let i = 0; i < depth; i++) {
         gl.setRenderTarget(renderTarget, i)
         if (!uniforms[depthName]) uniforms[depthName] = { value: i }
-        uniforms[depthName].value = i / depth
+        uniforms[depthName].value = i
         gl.render(scene, camera)
       }
     } else {

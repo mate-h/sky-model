@@ -6,7 +6,8 @@ import {
   RGBAFormat,
   WebGLRenderTarget,
   WebGL3DRenderTarget,
-  LinearFilter
+  LinearFilter,
+  Vector3
 } from 'three'
 import transmittanceFragment from './transmittance.frag'
 import scatteringFragment from './scattering.frag'
@@ -63,9 +64,17 @@ export function Sky() {
     depth: 32,
   })
 
+  const xAxis = useMemo(() => new Vector3(1, 0, 0), [])
+  const sunDirection = useMemo(() => new Vector3(0, 1, 0), [])
+
   const getUniforms = (state: RootState) => {
     const w = state.size.width * state.viewport.dpr
     const h = state.size.height * state.viewport.dpr
+    const t = state.clock.elapsedTime
+    // rotate the sun around the x axis
+    sunDirection.set(0, 1, 0)
+    sunDirection.applyAxisAngle(xAxis, t * .01 + 4.6)
+    
     return {
       iResolution: { value: [w, h, 0] },
       iCameraWorld: { value: state.camera.matrixWorld },
@@ -74,7 +83,8 @@ export function Sky() {
       iScattering: { value: scatteringTexture?.texture },
       iSkyview: { value: skyviewTexture?.texture },
       iAerialPerspective: { value: aerialPerspectiveTexture?.texture },
-      iTime: { value: state.clock.elapsedTime + 3 },
+      iTime: { value: t + 3 },
+      iSunDirection: { value: sunDirection },
     }
   }
   const state = useThree()
@@ -112,23 +122,23 @@ export function Sky() {
         renderTarget={aerialPerspectiveTexture}
       />
 
-      {/* <ScreenQuad>
+      <ScreenQuad>
         <shaderMaterial
           depthTest={false}
           vertexShader={vertexPass}
           uniforms={uniforms}
           fragmentShader={imageFragment}
         />
-      </ScreenQuad> */}
+      </ScreenQuad>
 
-      <ScreenQuad>
+      {/* <ScreenQuad>
         <shaderMaterial
           depthTest={false}
           vertexShader={vertexPass}
           uniforms={uniforms}
           fragmentShader={testFragment}
         />
-      </ScreenQuad>
+      </ScreenQuad> */}
 
       <gridHelper />
     </>

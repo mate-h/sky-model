@@ -10,7 +10,7 @@ vec3 getValFromSkyLUT(vec3 rayDir, vec3 sunDir) {
   float altitudeAngle = horizonAngle - acos(dot(rayDir, up)); // Between -PI/2 and PI/2
   float azimuthAngle; // Between 0 and 2*PI
   if(abs(altitudeAngle) > (0.5 * PI - .0001)) {
-        // Looking nearly straight up or down.
+    // Looking nearly straight up or down.
     azimuthAngle = 0.0;
   } else {
     vec3 right = cross(sunDir, up);
@@ -46,7 +46,7 @@ vec3 sunWithBloom(vec3 rayDir, vec3 sunDir) {
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-  vec3 sunDir = getSunDir(iTime);
+  vec3 sunDir = iSunDirection;
 
   // determine the ray direction
   vec3 rayOrigin, rayDir;

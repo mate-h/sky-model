@@ -1,4 +1,4 @@
-import { Loader, OrbitControls, Stats } from '@react-three/drei'
+import { Loader, OrbitControls, PerspectiveCamera, Stats } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Sky } from './sky'
 import { GrassMaterial } from './grass'

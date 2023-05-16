@@ -24,22 +24,6 @@ const float mieAbsorptionBase = 4.4;
 
 const vec3 ozoneAbsorptionBase = vec3(0.650, 1.881, .085);
 
-/*
- * Animates the sun movement.
- */
-float getSunAltitude(float time) {
-  const float periodSec = 120.0;
-  const float halfPeriod = periodSec / 2.0;
-  const float sunriseShift = 0.1;
-  float cyclePoint = (1.0 - abs((mod(time, periodSec) - halfPeriod) / halfPeriod));
-  cyclePoint = (cyclePoint * (1.0 + sunriseShift)) - sunriseShift;
-  return (0.5 * PI) * cyclePoint;
-}
-vec3 getSunDir(float time) {
-  float altitude = getSunAltitude(time);
-  return normalize(vec3(0.0, sin(altitude), -cos(altitude)));
-}
-
 float getMiePhase(float cosTheta) {
   const float g = 0.8;
   const float scale = 3.0 / (8.0 * PI);
