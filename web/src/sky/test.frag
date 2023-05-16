@@ -13,6 +13,8 @@ void main() {
 
   // texture values
   vec4 value = texture(iAerialPerspective, uvw);
+  value.rgb = vec3(iTime);
+  value.a = 1.0;
   // value = texture(iSkyview, uv);
   vec3 rdd = value.xyz;
 
@@ -31,5 +33,6 @@ void main() {
   // gl_FragColor = vec4(vec3(meanSquaredError), 1.0);
 
   // plot texture value in gl_FragColor
-  gl_FragColor = value;
+  gl_FragColor.rgb = vec3(iTime);
+  gl_FragColor.a = 1.0;
 }

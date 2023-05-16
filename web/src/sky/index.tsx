@@ -85,9 +85,9 @@ export function Sky() {
   const state = useThree()
   const uniforms = getUniforms(state)
   useFrame((state) => {
-    Object.entries(getUniforms(state)).forEach(([key, value]) => {
+    Object.entries(getUniforms(state)).forEach(([key, uniform]) => {
       // @ts-ignore
-      uniforms[key].value = value.value
+      uniforms[key].value = uniform.value
     })
   })
 
@@ -117,7 +117,7 @@ export function Sky() {
         renderTarget={aerialPerspectiveTexture}
       />
 
-      <ScreenQuad>
+       <ScreenQuad>
         <shaderMaterial
           depthTest={false}
           vertexShader={vertexPass}

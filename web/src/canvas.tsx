@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { Sky } from './sky'
 import { GrassMaterial } from './grass'
 import { Perf } from 'r3f-perf'
+import { Terrain } from './terrain'
 
 export default function () {
   const space = 3
@@ -14,6 +15,7 @@ export default function () {
         <Perf />
         {/* <fog attach="fog" /> */}
         <Sky />
+        <Terrain />
 
         {/* <mesh position={[getX(0), 0, 0]}>
           <sphereGeometry />
