@@ -5,8 +5,6 @@
 // the value is the transmittance from that point to sun, through the atmosphere.
 const float sunTransmittanceSteps = 40.0;
 
-in vec2 vUv;
-
 vec3 getSunTransmittance(vec3 pos, vec3 sunDir) {
   if(rayIntersectSphere(pos, sunDir, groundRadiusMM) > 0.0) {
     return vec3(0.0);
