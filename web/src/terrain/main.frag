@@ -30,11 +30,40 @@ void main() {
   uvw.xy = uv;
   uvw.z = t;
 
-  // inscatter and transmittance at the current position
+  // aerial perspective LUT
   vec4 col = texture(iAerialPerspective, uvw);
 
+  // in-scattering from the current position to the camera
+  vec3 in_scatter = col.rgb;
+
+  // accumulated transmittance from the current position to the camera
+  float transmittance = col.a;
+
+  float r = length(pos);
+
+  // TODO:
+  // LUT sky irradiance at the current position  
+  // calculate the indirect irradiance
+  vec3 indirect_irradiance = vec3(0.);
+
+  const vec3 solar_irradiance = vec3(1.474000, 1.850400, 1.911980);
+
+  // get the transmittance to the sun
+  vec3 sun_transmittance = getValFromTLUT(iTransmittance, iResolution.xy, pos, iSunDirection);
+
+  // get the direct irradiance from the sun
+  vec3 direct_irradiance = sun_transmittance * solar_irradiance * max(dot(vNormal, iSunDirection), 0.0);
+
+  // TODO: PBR maps here
+  vec3 albedo = vec3(0.1);
+
+  vec3 radiance = albedo * (1.0 / PI) * (indirect_irradiance + direct_irradiance);
+
+  radiance += in_scatter;
+  radiance *= transmittance;
+
   vec4 fragColor;
-  fragColor.rgb = col.rgb * iExposure * col.a;
+  fragColor.rgb = radiance * iExposure;
   fragColor.a = 1.0;
 
   gl_FragColor = fragColor;

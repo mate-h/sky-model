@@ -5,7 +5,7 @@
 // the value is the transmittance from that point to sun, through the atmosphere.
 const float sunTransmittanceSteps = 40.0;
 
-vec3 getSunTransmittance(vec3 pos, vec3 sunDir) {
+vec3 computeTransmittance(vec3 pos, vec3 sunDir) {
   if(rayIntersectSphere(pos, sunDir, groundRadiusMM) > 0.0) {
     return vec3(0.0);
   }
@@ -44,7 +44,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   vec3 pos = vec3(0.0, height, 0.0);
   vec3 sunDir = normalize(vec3(0.0, sunCosTheta, -sin(sunTheta)));
 
-  fragColor = vec4(getSunTransmittance(pos, sunDir), 1.0);
+  fragColor = vec4(computeTransmittance(pos, sunDir), 1.0);
 }
 
 void main() {

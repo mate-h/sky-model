@@ -13,7 +13,8 @@ void main() {
 
   // texture values
   vec4 value = texture(iAerialPerspective, uvw);
-  // value = texture(iTransmittance, uv);
+  value = texture(iTransmittance, uv);
+  value = texture(iIrradiance, uv);
   // value = texture(iSkyview, uv);
   // value.a = 1.0;
   // value = texture(iSkyview, uv);

@@ -6,6 +6,7 @@ uniform vec3 iResolution;
 uniform sampler2D iTransmittance;
 uniform sampler2D iScattering;
 uniform sampler2D iSkyview;
+uniform sampler2D iIrradiance;
 uniform sampler3D iAerialPerspective;
 uniform float iTime;
 uniform float iDepth;

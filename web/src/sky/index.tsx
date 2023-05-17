@@ -13,6 +13,7 @@ import {
 import transmittanceFragment from './transmittance.frag'
 import scatteringFragment from './scattering.frag'
 import skyviewFragment from './skyview.frag'
+import irradianceFragment from './irradiance.frag'
 import aerialFragment from './aerial.frag'
 import imageFragment from './image.frag'
 import testFragment from './test.frag'
@@ -60,16 +61,23 @@ function use3DRenderTarget({
   }, [width, height, depth])
 }
 
+export type SkyContext = {
+  aerialPerspective?: React.MutableRefObject<Data3DTexture | undefined>
+  transmittance?: React.MutableRefObject<Texture | undefined>
+  irradiance?: React.MutableRefObject<Texture | undefined>
+  sunDirection?: React.MutableRefObject<Vector3 | undefined>
+}
+
 export function Sky({
   aerialPerspective,
   transmittance,
-}: {
-  aerialPerspective?: React.MutableRefObject<Data3DTexture | undefined>
-  transmittance?: React.MutableRefObject<Texture | undefined>
-}) {
+  irradiance,
+  sunDirection: sunDir,
+}: SkyContext) {
   const transmittanceTexture = useRenderTarget()
   const scatteringTexture = useRenderTarget()
   const skyviewTexture = useRenderTarget()
+  const irradianceTexture = useRenderTarget()
   const aerialPerspectiveTexture = use3DRenderTarget({
     width: 32,
     height: 32,
@@ -86,6 +94,12 @@ export function Sky({
     if (aerialPerspective) {
       aerialPerspective.current = aerialPerspectiveTexture.texture
     }
+    if (irradiance) {
+      irradiance.current = irradianceTexture.texture
+    }
+    if (sunDir) {
+      sunDir.current = sunDirection
+    }
     if (transmittance) {
       transmittance.current = transmittanceTexture.texture
     }
@@ -96,6 +110,7 @@ export function Sky({
       iCameraProjectionInverse: { value: state.camera.projectionMatrixInverse },
       iTransmittance: { value: transmittanceTexture?.texture },
       iScattering: { value: scatteringTexture?.texture },
+      iIrradiance: { value: irradianceTexture?.texture },
       iSkyview: { value: skyviewTexture?.texture },
       iAerialPerspective: { value: aerialPerspectiveTexture?.texture },
       iTime: { value: t + 3 },
@@ -124,6 +139,12 @@ export function Sky({
         fragmentShader={skyviewFragment}
         uniforms={getUniforms}
         renderTarget={skyviewTexture}
+      />
+
+      <ShaderPass
+        fragmentShader={irradianceFragment}
+        uniforms={getUniforms}
+        renderTarget={irradianceTexture}
       />
 
       <ShaderPass

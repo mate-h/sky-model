@@ -5,7 +5,7 @@ import { GrassMaterial } from './grass'
 import { Perf } from 'r3f-perf'
 import { Terrain } from './terrain'
 import { useRef } from 'react'
-import { Data3DTexture, Texture } from 'three'
+import { Data3DTexture, Texture, Vector3 } from 'three'
 import { Test } from './test'
 
 export default function () {
@@ -14,14 +14,24 @@ export default function () {
   const getX = (i: number) => (i - (itemCount - 1) / 2) * space
 
   const aerialPerspective = useRef<Data3DTexture>()
+  const irradiance = useRef<Texture>()
   const transmittance = useRef<Texture>()
+  const sunDirection = useRef<Vector3>()
   return (
     <>
       <Canvas camera={{ fov: 70, position: [0, 2, 8] }}>
         <Perf />
         {/* <fog attach="fog" /> */}
-        <Sky aerialPerspective={aerialPerspective} transmittance={transmittance} />
-        <Terrain aerialPerspective={aerialPerspective} transmittance={transmittance} />
+        <Sky
+          aerialPerspective={aerialPerspective}
+          irradiance={irradiance}
+          transmittance={transmittance}
+          sunDirection={sunDirection}
+        />
+        <Terrain aerialPerspective={aerialPerspective}
+          irradiance={irradiance}
+          transmittance={transmittance}
+          sunDirection={sunDirection} />
 
         {/* <Test /> */}
 

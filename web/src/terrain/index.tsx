@@ -3,14 +3,14 @@ import mainFrag from './main.frag'
 import mainVert from './main.vert'
 import { useRef } from 'react'
 import { useUniforms } from '../shader/uniforms'
+import { SkyContext } from '../sky'
 
 export function Terrain({
   aerialPerspective,
-  transmittance
-}: {
-  aerialPerspective?: React.MutableRefObject<Data3DTexture | undefined>
-  transmittance?: React.MutableRefObject<Texture | undefined>
-}) {
+  transmittance,
+  irradiance,
+  sunDirection,
+}: SkyContext) {
   const matRef = useRef<ShaderMaterial>(null)
   useUniforms(matRef, (state) => {
     const w = state.size.width * state.viewport.dpr
@@ -21,6 +21,12 @@ export function Terrain({
       iCameraProjectionInverse: { value: state.camera.projectionMatrixInverse },
       iAerialPerspective: {
         value: aerialPerspective?.current,
+      },
+      iIrradiance: {
+        value: irradiance?.current,
+      },
+      iSunDirection: {
+        value: sunDirection?.current,
       },
       iTransmittance: {
         value: transmittance?.current,

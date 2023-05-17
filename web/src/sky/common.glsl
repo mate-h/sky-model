@@ -21,6 +21,7 @@ const vec2 msLUTRes = vec2(32.0, 32.0);
 // Doubled the vertical skyLUT res from the paper, looks way
 // better for sunrise.
 const vec2 skyLUTRes = vec2(200.0, 200.0);
+const vec2 irradianceLUTRes = vec2(512.0, 128.0);
 
 const vec3 groundAlbedo = vec3(0.3);
 
@@ -112,6 +113,15 @@ vec3 getValFromMultiScattLUT(sampler2D tex, vec2 bufferRes, vec3 pos, vec3 sunDi
   vec3 up = pos / height;
   float sunCosZenithAngle = dot(sunDir, up);
   vec2 uv = vec2(msLUTRes.x * clamp(0.5 + 0.5 * sunCosZenithAngle, 0.0, 1.0), msLUTRes.y * max(0.0, min(1.0, (height - groundRadiusMM) / (atmosphereRadiusMM - groundRadiusMM))));
+  uv /= bufferRes;
+  return texture(tex, uv).rgb;
+}
+
+vec3 getValFromIrradianceLUT(sampler2D tex, vec2 bufferRes, vec3 pos, vec3 sunDir) {
+  float height = length(pos);
+  vec3 up = pos / height;
+  float sunCosZenithAngle = dot(sunDir, up);
+  vec2 uv = vec2(irradianceLUTRes.x * clamp(0.5 + 0.5 * sunCosZenithAngle, 0.0, 1.0), irradianceLUTRes.y * max(0.0, min(1.0, (height - groundRadiusMM) / (atmosphereRadiusMM - groundRadiusMM))));
   uv /= bufferRes;
   return texture(tex, uv).rgb;
 }
