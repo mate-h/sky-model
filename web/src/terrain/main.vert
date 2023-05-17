@@ -1,13 +1,9 @@
 #include fbm
+#include common
 
 out vec2 vUv;
 out vec3 vNormal;
 out vec3 vPosition;
-
-float displacement(vec2 uv) {
-  vec2 scaledUv = uv * vec2(5.);
-  return fbm(scaledUv, vec2(10.)) * .3;
-}
 
 void main() {
   vUv = uv;

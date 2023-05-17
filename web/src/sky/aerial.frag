@@ -10,7 +10,6 @@ void main() {
   // (ro, rd) is the ray from the camera to the current pixel
   vec3 ro, rd;
   cameraRay(ro, rd, res);
-  ro = viewPos;
 
   // calculate the start and end of the corresponding view ray segment
   // tmin and tmax are the distances to the near and far planes of the view frustum
@@ -27,9 +26,6 @@ void main() {
   vec3 pos = ro + rd * t;
 
   vec3 transmittance, luminance, inscattering;
-  float atmoDist = rayIntersectSphere(ro, rd, atmosphereRadiusMM);
-  float groundDist = rayIntersectSphere(ro, rd, groundRadiusMM);
-  float tMax = (groundDist < 0.0) ? atmoDist : groundDist;
   raymarchScattering(pos, rd, iSunDirection, t, float(numScatteringSteps), transmittance, luminance, inscattering);
 
   // Store the in-scattering in the RGB channels of the texture and the transmittance in the A channel

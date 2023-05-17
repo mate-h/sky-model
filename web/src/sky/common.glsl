@@ -4,8 +4,17 @@ const float PI = 3.14159265358;
 const float groundRadiusMM = 6.360;
 const float atmosphereRadiusMM = 6.460;
 
-// 200M above the ground.
-const vec3 viewPos = vec3(0.0, groundRadiusMM + 0.0002, 0.0);
+// on the north pole
+const vec3 viewPos = vec3(0.0, groundRadiusMM, 0.0);
+// 1 km per unit
+const float viewScale = 0.001;
+vec3 getCameraPosition() {
+  return viewPos + cameraPosition * viewScale;
+}
+
+vec3 transformPosition(vec3 pos) {
+  return viewPos + pos * viewScale;
+}
 
 const vec2 tLUTRes = vec2(256.0, 64.0);
 const vec2 msLUTRes = vec2(32.0, 32.0);

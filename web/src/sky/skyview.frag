@@ -24,19 +24,20 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     adjV = coord * coord;
   }
 
-  float height = length(viewPos);
-  vec3 up = viewPos / height;
+  vec3 ro = getCameraPosition();
+  float height = length(ro);
+  vec3 up = ro / height;
   float horizonAngle = safeacos(sqrt(height * height - groundRadiusMM * groundRadiusMM) / height) - 0.5 * PI;
   float altitudeAngle = adjV * 0.5 * PI - horizonAngle;
 
   float cosAltitude = cos(altitudeAngle);
   vec3 rayDir = vec3(cosAltitude * sin(azimuthAngle), sin(altitudeAngle), -cosAltitude * cos(azimuthAngle));
 
-  float atmoDist = rayIntersectSphere(viewPos, rayDir, atmosphereRadiusMM);
-  float groundDist = rayIntersectSphere(viewPos, rayDir, groundRadiusMM);
+  float atmoDist = rayIntersectSphere(ro, rayDir, atmosphereRadiusMM);
+  float groundDist = rayIntersectSphere(ro, rayDir, groundRadiusMM);
   float tMax = (groundDist < 0.0) ? atmoDist : groundDist;
   vec3 transmittance, luminance, inscattering;
-  raymarchScattering(viewPos, rayDir, iSunDirection, tMax, float(numScatteringSteps), transmittance, luminance, inscattering);
+  raymarchScattering(ro, rayDir, iSunDirection, tMax, float(numScatteringSteps), transmittance, luminance, inscattering);
   fragColor = vec4(luminance, 1.0);
 }
 

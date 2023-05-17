@@ -16,7 +16,7 @@ export default function () {
   const aerialPerspective = useRef<Data3DTexture>()
   return (
     <>
-      <Canvas camera={{ fov: 70 }}>
+      <Canvas camera={{ fov: 70, position: [0, 2, 8] }}>
         <Perf />
         {/* <fog attach="fog" /> */}
         <Sky aerialPerspective={aerialPerspective} />

@@ -7,6 +7,7 @@ import {
   LinearFilter,
   Vector3,
   Data3DTexture,
+  ClampToEdgeWrapping,
 } from 'three'
 import transmittanceFragment from './transmittance.frag'
 import scatteringFragment from './scattering.frag'
@@ -47,10 +48,13 @@ function use3DRenderTarget({
   }
   return useMemo(() => {
     const target = new WebGL3DRenderTarget(width, height, depth)
-    target.texture.format = RGBAFormat
-    target.texture.type = HalfFloatType
-    target.texture.minFilter = LinearFilter
-    target.texture.magFilter = LinearFilter
+    const tex = target.texture
+    tex.format = RGBAFormat
+    tex.type = HalfFloatType
+    tex.minFilter = LinearFilter
+    tex.magFilter = LinearFilter
+    tex.generateMipmaps = false
+    tex.wrapS = tex.wrapT = tex.wrapR = ClampToEdgeWrapping
     return target
   }, [width, height, depth])
 }
@@ -94,7 +98,7 @@ export function Sky({
     }
   }
 
-  let testing = true
+  let testing = false
 
   return (
     <>

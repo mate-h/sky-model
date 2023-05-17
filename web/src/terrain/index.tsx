@@ -30,7 +30,7 @@ export function Terrain({
   // dynamic LOD
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[1, 1, 100, 100]} />
+      <planeGeometry args={[8, 8, 160, 160]} />
       <shaderMaterial
         ref={matRef}
         vertexShader={mainVert}

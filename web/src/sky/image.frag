@@ -3,8 +3,9 @@
 #include ray
 
 vec3 getValFromSkyLUT(vec3 rayDir, vec3 sunDir) {
-  float height = length(viewPos);
-  vec3 up = viewPos / height;
+  vec3 ro = getCameraPosition();
+  float height = length(ro);
+  vec3 up = ro / height;
 
   float horizonAngle = safeacos(sqrt(height * height - groundRadiusMM * groundRadiusMM) / height);
   float altitudeAngle = horizonAngle - acos(dot(rayDir, up)); // Between -PI/2 and PI/2
@@ -59,11 +60,12 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   // Use smoothstep to limit the effect, so it drops off to actual zero.
   sunLum = smoothstep(0.002, 1.0, sunLum);
   if(length(sunLum) > 0.0) {
-    if(rayIntersectSphere(viewPos, rayDir, groundRadiusMM) >= 0.0) {
+    vec3 ro = getCameraPosition();
+    if(rayIntersectSphere(ro, rayDir, groundRadiusMM) >= 0.0) {
       sunLum *= 0.0;
     } else {
       // If the sun value is applied to this pixel, we need to calculate the transmittance to obscure it.
-      sunLum *= getValFromTLUT(iTransmittance, iResolution.xy, viewPos, sunDir);
+      sunLum *= getValFromTLUT(iTransmittance, iResolution.xy, ro, sunDir);
     }
   }
   lum += sunLum;
