@@ -33,10 +33,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   float cosAltitude = cos(altitudeAngle);
   vec3 rayDir = vec3(cosAltitude * sin(azimuthAngle), sin(altitudeAngle), -cosAltitude * cos(azimuthAngle));
 
-  float atmoDist = rayIntersectSphere(ro, rayDir, atmosphereRadiusMM);
-  float groundDist = rayIntersectSphere(ro, rayDir, groundRadiusMM);
-  float tMax = (groundDist < 0.0) ? atmoDist : groundDist;
   vec3 transmittance, luminance, inscattering;
+  float tMax = rayIntersectScene(ro, rayDir);
   raymarchScattering(ro, rayDir, iSunDirection, tMax, float(numScatteringSteps), transmittance, luminance, inscattering);
   fragColor = vec4(luminance, 1.0);
 }

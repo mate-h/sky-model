@@ -19,6 +19,7 @@ void main() {
 
   // unit vector along the view ray
   float u = 1. / res.z;
+  
   // uniform iDepth is the current depth of the LUT
   float t = tmin + (tmax - tmin) * u * iDepth;
   
@@ -27,11 +28,13 @@ void main() {
 
   vec3 transmittance, luminance, inscattering;
   raymarchScattering(pos, rd, iSunDirection, t, float(numScatteringSteps), transmittance, luminance, inscattering);
-
   // Store the in-scattering in the RGB channels of the texture and the transmittance in the A channel
   // The luminance is used to calculate the average luminance of the atmosphere
   vec4 fragColor;
   fragColor.rgb = inscattering;
+
+  // float tMax = rayIntersectScene(pos, rd);
+  // raymarchScattering(pos, rd, iSunDirection, tMax, float(numScatteringSteps), transmittance, luminance, inscattering);
 
   vec3 tt = transmittance;
   fragColor.a = (tt.r + tt.g + tt.b) / 3.0;

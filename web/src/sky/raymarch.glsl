@@ -16,12 +16,12 @@ void raymarchScattering(
   skyLuminance = vec3(0.0);
   transmittance = vec3(1.0);
   inscattering = vec3(0.0);
-  float t = 0.0;
-  for(float i = 0.0; i < numSteps; i += 1.0) {
-    float newT = ((i + 0.3) / numSteps) * tMax;
-    float dt = newT - t;
-    t = newT;
 
+  vec3 previousScattering = vec3(0.0);
+  float t = 0.0;
+  float dt = tMax / numSteps;
+
+  for(float i = 0.0; i <= numSteps; i += 1.0) {
     vec3 newPos = pos + t * rayDir;
 
     vec3 rayleighScattering, extinction;
@@ -35,18 +35,23 @@ void raymarchScattering(
 
     vec3 rayleighInScattering = rayleighScattering * (rayleighPhaseValue * sunTransmittance + psiMS);
     vec3 mieInScattering = mieScattering * (miePhaseValue * sunTransmittance + psiMS);
-    vec3 inScattering = (rayleighInScattering + mieInScattering);
+    vec3 currentScattering = (rayleighInScattering + mieInScattering);
 
-    // Integrated scattering within path segment.
-    vec3 scatteringIntegral = (inScattering - inScattering * sampleTransmittance) / extinction;
+    vec3 scatteringIntegral;
+    if(extinction != vec3(0.0)) {
+      scatteringIntegral = (previousScattering + currentScattering) * 0.5 * dt;
+    } else {
+      scatteringIntegral = vec3(0.0);
+    }
 
-    // accumulate sky luminance along view ray
-    skyLuminance += scatteringIntegral * transmittance;
+    float weight = (i == 0.0 || i == numSteps) ? 0.5 : 1.0;
+    skyLuminance += weight * scatteringIntegral * transmittance;
+    inscattering += weight * currentScattering * dt;
 
-    // accumulate the total inscattered light along view ray for aerial perspective
-    inscattering += inScattering * dt;
-
-    // Accumulate transmittance
     transmittance *= sampleTransmittance;
+
+    previousScattering = currentScattering;
+
+    t += dt;
   }
 }

@@ -37,9 +37,9 @@ void main() {
   fragColor.rgb = col.rgb * iExposure * col.a;
   fragColor.a = 1.0;
 
-  // fragColor.rgb = vec3(t);
-
   gl_FragColor = fragColor;
+
+  // gl_FragColor = texture(iTransmittance, vUv);
 
   #include <tonemapping_fragment>
 }

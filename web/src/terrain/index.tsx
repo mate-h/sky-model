@@ -1,4 +1,4 @@
-import { Data3DTexture, ShaderMaterial } from 'three'
+import { Data3DTexture, ShaderMaterial, Texture } from 'three'
 import mainFrag from './main.frag'
 import mainVert from './main.vert'
 import { useRef } from 'react'
@@ -6,8 +6,10 @@ import { useUniforms } from '../shader/uniforms'
 
 export function Terrain({
   aerialPerspective,
+  transmittance
 }: {
   aerialPerspective?: React.MutableRefObject<Data3DTexture | undefined>
+  transmittance?: React.MutableRefObject<Texture | undefined>
 }) {
   const matRef = useRef<ShaderMaterial>(null)
   useUniforms(matRef, (state) => {
@@ -20,6 +22,9 @@ export function Terrain({
       iAerialPerspective: {
         value: aerialPerspective?.current,
       },
+      iTransmittance: {
+        value: transmittance?.current,
+      },
       iTime: {
         value: state.clock.elapsedTime,
       },
@@ -30,7 +35,7 @@ export function Terrain({
   // dynamic LOD
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[8, 8, 160, 160]} />
+      <planeGeometry args={[10, 10, 160, 160]} />
       <shaderMaterial
         ref={matRef}
         vertexShader={mainVert}

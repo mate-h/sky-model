@@ -8,6 +8,7 @@ import {
   Vector3,
   Data3DTexture,
   ClampToEdgeWrapping,
+  Texture,
 } from 'three'
 import transmittanceFragment from './transmittance.frag'
 import scatteringFragment from './scattering.frag'
@@ -61,8 +62,10 @@ function use3DRenderTarget({
 
 export function Sky({
   aerialPerspective,
+  transmittance,
 }: {
   aerialPerspective?: React.MutableRefObject<Data3DTexture | undefined>
+  transmittance?: React.MutableRefObject<Texture | undefined>
 }) {
   const transmittanceTexture = useRenderTarget()
   const scatteringTexture = useRenderTarget()
@@ -82,6 +85,9 @@ export function Sky({
 
     if (aerialPerspective) {
       aerialPerspective.current = aerialPerspectiveTexture.texture
+    }
+    if (transmittance) {
+      transmittance.current = transmittanceTexture.texture
     }
 
     return {

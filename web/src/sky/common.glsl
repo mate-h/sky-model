@@ -88,6 +88,12 @@ float rayIntersectSphere(vec3 ro, vec3 rd, float rad) {
     return (-b + sqrt(discr));
   return -b - sqrt(discr);
 }
+float rayIntersectScene(in vec3 ro, in vec3 rayDir) {
+  float atmoDist = rayIntersectSphere(ro, rayDir, atmosphereRadiusMM);
+  float groundDist = rayIntersectSphere(ro, rayDir, groundRadiusMM);
+  float tMax = (groundDist < 0.0) ? atmoDist : groundDist;
+  return tMax;
+}
 
 /*
  * Same parameterization here.
