@@ -10,3 +10,4 @@ uniform sampler3D iAerialPerspective;
 uniform float iTime;
 uniform float iDepth;
 uniform vec3 iSunDirection;
+uniform float iExposure;

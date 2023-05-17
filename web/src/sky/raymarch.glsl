@@ -5,7 +5,8 @@ void raymarchScattering(
   float tMax,
   float numSteps,
   out vec3 transmittance,
-  out vec3 skyLuminance
+  out vec3 skyLuminance,
+  out vec3 inscattering
 ) {
   float cosTheta = dot(rayDir, sunDir);
 
@@ -14,6 +15,7 @@ void raymarchScattering(
 
   skyLuminance = vec3(0.0);
   transmittance = vec3(1.0);
+  inscattering = vec3(0.0);
   float t = 0.0;
   for(float i = 0.0; i < numSteps; i += 1.0) {
     float newT = ((i + 0.3) / numSteps) * tMax;
@@ -38,8 +40,11 @@ void raymarchScattering(
     // Integrated scattering within path segment.
     vec3 scatteringIntegral = (inScattering - inScattering * sampleTransmittance) / extinction;
 
-    // accumulate sky luminance, a.k.a. the total in-scattering along the ray
+    // accumulate sky luminance along view ray
     skyLuminance += scatteringIntegral * transmittance;
+
+    // accumulate the total inscattered light along view ray for aerial perspective
+    inscattering += inScattering * dt;
 
     // Accumulate transmittance
     transmittance *= sampleTransmittance;

@@ -1,11 +1,12 @@
-import { RootState, useFrame, useThree } from '@react-three/fiber'
+import { RootState, useThree } from '@react-three/fiber'
 import {
   HalfFloatType,
   RGBAFormat,
   WebGLRenderTarget,
   WebGL3DRenderTarget,
   LinearFilter,
-  Vector3
+  Vector3,
+  Data3DTexture,
 } from 'three'
 import transmittanceFragment from './transmittance.frag'
 import scatteringFragment from './scattering.frag'
@@ -18,6 +19,7 @@ import { ShaderPass } from '../shader/pass'
 import vertexPass from '../shader/pass.vert'
 import { ScreenQuad } from '@react-three/drei'
 import { SunHelper } from './helper'
+import { UniformMaterial } from '../shader/uniforms'
 
 function useRenderTarget() {
   const opts = {
@@ -53,7 +55,11 @@ function use3DRenderTarget({
   }, [width, height, depth])
 }
 
-export function Sky() {
+export function Sky({
+  aerialPerspective,
+}: {
+  aerialPerspective?: React.MutableRefObject<Data3DTexture | undefined>
+}) {
   const transmittanceTexture = useRenderTarget()
   const scatteringTexture = useRenderTarget()
   const skyviewTexture = useRenderTarget()
@@ -69,7 +75,11 @@ export function Sky() {
     const w = state.size.width * state.viewport.dpr
     const h = state.size.height * state.viewport.dpr
     const t = state.clock.elapsedTime
-    
+
+    if (aerialPerspective) {
+      aerialPerspective.current = aerialPerspectiveTexture.texture
+    }
+
     return {
       iResolution: { value: [w, h, 0] },
       iCameraWorld: { value: state.camera.matrixWorld },
@@ -80,64 +90,58 @@ export function Sky() {
       iAerialPerspective: { value: aerialPerspectiveTexture?.texture },
       iTime: { value: t + 3 },
       iSunDirection: { value: sunDirection },
+      iExposure: { value: 20 },
     }
   }
-  const state = useThree()
-  const uniforms = getUniforms(state)
-  useFrame((state) => {
-    Object.entries(getUniforms(state)).forEach(([key, uniform]) => {
-      // @ts-ignore
-      uniforms[key].value = uniform.value
-    })
-  })
+
+  let testing = true
 
   return (
     <>
       <ShaderPass
         fragmentShader={transmittanceFragment}
-        uniforms={uniforms}
+        uniforms={getUniforms}
         renderTarget={transmittanceTexture}
       />
 
       <ShaderPass
         fragmentShader={scatteringFragment}
-        uniforms={uniforms}
+        uniforms={getUniforms}
         renderTarget={scatteringTexture}
       />
 
       <ShaderPass
         fragmentShader={skyviewFragment}
-        uniforms={uniforms}
+        uniforms={getUniforms}
         renderTarget={skyviewTexture}
       />
 
       <ShaderPass
         fragmentShader={aerialFragment}
-        uniforms={uniforms}
+        uniforms={getUniforms}
         renderTarget={aerialPerspectiveTexture}
       />
 
-       <ScreenQuad>
-        <shaderMaterial
-          depthTest={false}
-          vertexShader={vertexPass}
-          uniforms={uniforms}
-          fragmentShader={imageFragment}
-        />
-      </ScreenQuad>
 
-      {/* <ScreenQuad>
-        <shaderMaterial
+      {testing && <ScreenQuad>
+        <UniformMaterial
           depthTest={false}
           vertexShader={vertexPass}
-          uniforms={uniforms}
+          uniforms={getUniforms}
           fragmentShader={testFragment}
         />
-      </ScreenQuad> */}
+      </ScreenQuad>}
+
+      {!testing && <ScreenQuad>
+        <UniformMaterial
+          depthTest={false}
+          vertexShader={vertexPass}
+          uniforms={getUniforms}
+          fragmentShader={imageFragment}
+        />
+      </ScreenQuad>}
 
       <SunHelper direction={sunDirection} />
-
-      <gridHelper />
     </>
   )
 }

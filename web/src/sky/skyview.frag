@@ -35,8 +35,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   float atmoDist = rayIntersectSphere(viewPos, rayDir, atmosphereRadiusMM);
   float groundDist = rayIntersectSphere(viewPos, rayDir, groundRadiusMM);
   float tMax = (groundDist < 0.0) ? atmoDist : groundDist;
-  vec3 transmittance, luminance;
-  raymarchScattering(viewPos, rayDir, iSunDirection, tMax, float(numScatteringSteps), transmittance, luminance);
+  vec3 transmittance, luminance, inscattering;
+  raymarchScattering(viewPos, rayDir, iSunDirection, tMax, float(numScatteringSteps), transmittance, luminance, inscattering);
   fragColor = vec4(luminance, 1.0);
 }
 

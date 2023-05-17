@@ -1,14 +1,25 @@
+#include ../sky/uniforms
+#include ../sky/common
+#include ../sky/ray
+
 in vec2 vUv;
 in vec3 vNormal;
-uniform float time;
-vec3 packNormalToRGB(const in vec3 normal) {
-  return normalize(normal) * 0.5 + 0.5;
-}
+in vec3 vPosition;
+
 void main() {
-  vec2 uv = vUv;
-  vec3 color = vec3(0.0);
-  vec2 center = vec2(0.5);
-  float dist = distance(uv, center);
-  color = vec3(dist);
-  gl_FragColor = vec4(packNormalToRGB(vNormal), 1.0);
+  vec3 color;
+
+  vec3 ro, rd;
+  cameraRay(ro, rd);
+
+  // inscatter and transittance at the current position
+  vec3 lutRes = vec3(32.);
+  float t = sin(iTime) * 0.5 + 0.5;
+  vec3 uvw = vec3(vUv, t);
+  vec4 col = texture(iAerialPerspective, uvw);
+
+  vec4 fragColor;
+  fragColor.rgb = col.rgb * iExposure;
+  fragColor.a = 1.0;
+  gl_FragColor = fragColor;
 }

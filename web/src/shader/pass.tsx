@@ -1,11 +1,12 @@
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
-import { IUniform, Scene, WebGL3DRenderTarget, WebGLRenderTarget } from 'three'
+import { Scene, ShaderMaterial, WebGLRenderTarget } from 'three'
 import vertexPass from './pass.vert'
 import { ScreenQuad } from '@react-three/drei'
+import { UniformGetter, UniformMaterial } from './uniforms'
 
 type ShaderPassProps = {
-  uniforms: Record<string, IUniform>
+  uniforms: UniformGetter
   fragmentShader: string
   renderTarget: WebGLRenderTarget
   depthName?: string
@@ -23,16 +24,21 @@ export function ShaderPass({
 }: ShaderPassProps) {
   const root = useRef<Scene>(null)
   const is3D = renderTarget.depth > 0
+  const materialRef = useRef<ShaderMaterial>(null)
   useFrame(({ gl, camera }) => {
     const scene = root.current!
     if (!scene || !renderTarget) return
     scene.visible = true
     if (is3D) {
-      const { depth } = renderTarget;
+      const { depth } = renderTarget
       for (let i = 0; i < depth; i++) {
         gl.setRenderTarget(renderTarget, i)
-        if (!uniforms[depthName]) uniforms[depthName] = { value: i }
-        uniforms[depthName].value = i
+        // set the iDepth uniform on the material
+        const u = materialRef.current!.uniforms;
+        if (u) {
+          if (!u[depthName]) u[depthName] = { value: i }
+          u[depthName].value = i
+        }
         gl.render(scene, camera)
       }
     } else {
@@ -45,7 +51,8 @@ export function ShaderPass({
   return (
     <scene ref={root}>
       <ScreenQuad>
-        <shaderMaterial
+        <UniformMaterial
+          ref={materialRef}
           uniforms={uniforms}
           vertexShader={vertexPass}
           fragmentShader={fragmentShader}

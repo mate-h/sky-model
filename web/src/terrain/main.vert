@@ -2,6 +2,7 @@
 
 out vec2 vUv;
 out vec3 vNormal;
+out vec3 vPosition;
 
 float displacement(vec2 uv) {
   vec2 scaledUv = uv * vec2(5.);
@@ -21,11 +22,12 @@ void main() {
   vec3 n2 = normalize(cross(p2 - pos, p3 - pos));
   vec3 n3 = normalize(cross(p3 - pos, p4 - pos));
   vec3 n4 = normalize(cross(p4 - pos, p1 - pos));
-  vNormal = normalize(n1 + n2 + n3 + n4);
+  vec3 n = normalize(n1 + n2 + n3 + n4);
   pos.z = displacement(uv);
 
-  // rotate normal
-  vNormal = normalize(mat3(modelMatrix) * vNormal);
+  // apply model matrix to normal and position
+  vNormal = normalize(mat3(modelMatrix) * n);
+  vPosition = (modelMatrix * vec4(pos, 1.0)).xyz;
 
   gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
 }

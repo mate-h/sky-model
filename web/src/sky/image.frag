@@ -69,7 +69,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   lum += sunLum;
 
   // Exposure
-  lum *= 20.0;
+  lum *= iExposure;
 
   fragColor = vec4(lum, 1.0);
 }

@@ -13,7 +13,8 @@ void main() {
 
   // texture values
   vec4 value = texture(iAerialPerspective, uvw);
-  value.rgb = vec3(iTime);
+  // value = texture(iTransmittance, uv);
+  // value = texture(iSkyview, uv);
   value.a = 1.0;
   // value = texture(iSkyview, uv);
   vec3 rdd = value.xyz;
@@ -33,6 +34,12 @@ void main() {
   // gl_FragColor = vec4(vec3(meanSquaredError), 1.0);
 
   // plot texture value in gl_FragColor
-  gl_FragColor.rgb = vec3(iTime);
+  gl_FragColor.rgb = value.rgb * iExposure;
+  // if the right of the frame, plot the w value
+  if (uv.x > 0.5) {
+    gl_FragColor.rgb = vec3(w);
+  }
   gl_FragColor.a = 1.0;
+
+  #include <tonemapping_fragment>
 }
