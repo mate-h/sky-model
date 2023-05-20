@@ -1,4 +1,4 @@
-import { Data3DTexture, ShaderMaterial, Texture } from 'three'
+import { ShaderMaterial } from 'three'
 import mainFrag from './main.frag'
 import mainVert from './main.vert'
 import { useRef } from 'react'

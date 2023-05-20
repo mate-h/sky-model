@@ -10,16 +10,18 @@ const external = [
   '@react-three/drei',
 ]
 
+// for library mode
+const build = {
+  lib: {
+    entry: 'src/index.ts',
+    formats: ['es'],
+  },
+  rollupOptions: {
+    external,
+  },
+};
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), glsl()],
-  build: {
-    lib: {
-      entry: 'src/index.ts',
-      formats: ['es'],
-    },
-    rollupOptions: {
-      external,
-    },
-  },
 })

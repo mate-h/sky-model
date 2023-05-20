@@ -45,9 +45,6 @@ function use3DRenderTarget({
   height: number
   depth: number
 }) {
-  const opts = {
-    type: HalfFloatType,
-  }
   return useMemo(() => {
     const target = new WebGL3DRenderTarget(width, height, depth)
     const tex = target.texture
