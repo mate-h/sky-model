@@ -12,9 +12,9 @@ vec2 rdToUv(vec3 rd) {
   return vec2(x, y);
 }
 
-void cameraRay(out vec3 ro, out vec3 rd, in vec3 resolution) {
+void cameraRay(out vec3 ro, out vec3 rd) {
   vec2 fragCoord = gl_FragCoord.xy;
-  vec2 uv = fragCoord.xy / resolution.xy;
+  vec2 uv = fragCoord.xy / iResolution.xy;
   vec4 rayClip = vec4(uv * 2.0 - 1.0, -1.0, 1.0);
   vec4 rayEye = iCameraProjectionInverse * rayClip;
   rayEye = vec4(rayEye.xy, -1.0, 0.0);
@@ -25,6 +25,13 @@ void cameraRay(out vec3 ro, out vec3 rd, in vec3 resolution) {
   rd = rayWorld;
 }
 
-void cameraRay(out vec3 ro, out vec3 rd) {
-  cameraRay(ro, rd, iResolution);
+void cameraRayUv(out vec3 ro, out vec3 rd, in vec2 uv) {
+  vec4 rayClip = vec4(uv * 2.0 - 1.0, -1.0, 1.0);
+  vec4 rayEye = iCameraProjectionInverse * rayClip;
+  rayEye = vec4(rayEye.xy, -1.0, 0.0);
+  vec3 rayWorld = (iCameraWorld * rayEye).xyz;
+  rayWorld = normalize(rayWorld);
+  // three js built in uniform cameraPosition
+  ro = getCameraPosition();
+  rd = rayWorld;
 }

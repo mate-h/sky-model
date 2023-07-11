@@ -81,7 +81,7 @@ export function Sky({
     depth: 32,
   })
 
-  const sunDirection = useMemo(() => new Vector3(0, 0, -1), [])
+  const sunDirection = useMemo(() => new Vector3(0, 0, -1).normalize(), [])
 
   const getUniforms = (state: RootState) => {
     const w = state.size.width * state.viewport.dpr

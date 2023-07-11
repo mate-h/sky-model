@@ -3,19 +3,24 @@
 #include ray
 #include raymarch
 
+in vec2 vUv;
+in vec3 vPosition;
+
 const int numScatteringSteps = 32;
 
 void main() {
   vec3 res = vec3(32.);
   // (ro, rd) is the ray from the camera to the current pixel
   vec3 ro, rd;
-  cameraRay(ro, rd, res);
+
+  vec2 uv = gl_FragCoord.xy / res.xy;
+  cameraRayUv(ro, rd, uv);
 
   // calculate the start and end of the corresponding view ray segment
   // tmin and tmax are the distances to the near and far planes of the view frustum
   float tmin = 0.0;
   // units are in megameters
-  float tmax = .032; // 32 km 
+  float tmax = 0.032; // 32 km 
 
   // unit vector along the view ray
   float u = 1. / res.z;
@@ -39,5 +44,7 @@ void main() {
   vec3 tt = transmittance;
   fragColor.a = (tt.r + tt.g + tt.b) / 3.0;
 
+  // fragColor.rgb = vec3(vPosition);
+  // fragColor.a = 1.;
   gl_FragColor = fragColor;
 }

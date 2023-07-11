@@ -51,9 +51,9 @@ float getRayleighPhase(float cosTheta) {
 
 void getScatteringValues(
   vec3 pos,
-  out vec3 rayleighScattering,
-  out float mieScattering,
-  out vec3 extinction
+  out vec3 rayleighScattering, // sigma_rs
+  out float mieScattering, // sigma_ms
+  out vec3 extinction // sigma_e
 ) {
   float altitudeKM = (length(pos) - groundRadiusMM) * 1000.0;
   // Note: Paper gets these switched up.

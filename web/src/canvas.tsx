@@ -2,9 +2,11 @@ import { Loader, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Sky } from './sky'
 import { Perf } from 'r3f-perf'
-import { Terrain } from './terrain'
+import { Terrain } from './terrain/shaded'
 import { useRef } from 'react'
 import { Data3DTexture, Texture, Vector3 } from 'three'
+import { TerrainDisplaced } from './terrain/displaced'
+import { TerrainDebug } from './terrain/debug'
 
 export default function () {
   // const space = 3
@@ -17,8 +19,8 @@ export default function () {
   const sunDirection = useRef<Vector3>()
   return (
     <>
-      <Canvas camera={{ fov: 70, position: [0, 2, 8] }}>
-        <Perf />
+      <Canvas camera={{ fov: 70, position: [0, 1.3, 6] }}>
+        {/* <Perf /> */}
         {/* <fog attach="fog" /> */}
         <Sky
           aerialPerspective={aerialPerspective}
@@ -26,10 +28,22 @@ export default function () {
           transmittance={transmittance}
           sunDirection={sunDirection}
         />
-        <Terrain aerialPerspective={aerialPerspective}
+
+        <Terrain
+          aerialPerspective={aerialPerspective}
           irradiance={irradiance}
           transmittance={transmittance}
-          sunDirection={sunDirection} />
+          sunDirection={sunDirection}
+        />
+
+        {/* <TerrainDebug
+          context={{
+            aerialPerspective,
+            irradiance,
+            transmittance,
+            sunDirection,
+          }}
+        /> */}
 
         {/* <Test /> */}
 
