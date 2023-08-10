@@ -1,4 +1,5 @@
 const float PI = 3.14159265358;
+const float RAD = 180.0 / PI;
 
 // Units are in megameters.
 const float groundRadiusMM = 6.360;
@@ -15,6 +16,11 @@ vec3 getCameraPosition() {
 vec3 transformPosition(vec3 pos) {
   return viewPos + pos * viewScale;
 }
+
+// 32 km
+const float aerialLutRange = 0.032 * 4.;
+const float aerialLutStep = 0.001 * 4.;
+const float aerialLutRes = 32.;
 
 const vec2 tLUTRes = vec2(256.0, 64.0);
 const vec2 msLUTRes = vec2(32.0, 32.0);
@@ -33,6 +39,7 @@ const float mieScatteringBase = 3.996;
 const float mieAbsorptionBase = 4.4;
 
 const vec3 ozoneAbsorptionBase = vec3(0.650, 1.881, .085);
+const vec3 solar_irradiance = vec3(1.474000, 1.850400, 1.911980);
 
 float getMiePhase(float cosTheta) {
   const float g = 0.8;

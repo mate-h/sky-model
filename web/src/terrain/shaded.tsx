@@ -1,38 +1,33 @@
-import { ShaderMaterial, Texture, TextureLoader } from 'three'
+import { ShaderMaterial, Texture, TextureLoader, Vector3 } from 'three'
 import mainFrag from './main.frag'
 import mainVert from './main.vert'
 import { useEffect, useRef, useState } from 'react'
 import { useUniforms } from '../shader/uniforms'
 import { SkyContext } from '../sky'
 import { MapTile } from './lib'
-import { ScreenQuad } from '@react-three/drei'
-import vertPass from '../shader/pass.vert'
 
-export function Terrain({
+function TerrainMaterial({
   aerialPerspective,
   transmittance,
   irradiance,
   sunDirection,
-}: SkyContext) {
+  multiScattering,
+  terrainTexture,
+  albedoTexture,
+}: SkyContext & {
+  terrainTexture: React.MutableRefObject<Texture | undefined>
+  albedoTexture: React.MutableRefObject<Texture | undefined>
+}) {
   const matRef = useRef<ShaderMaterial>(null)
-  const mapTile = new MapTile(181, 343, 10)
-  const terrainTexture = useRef<Texture>()
-  const albedoTexture = useRef<Texture>()
-  useEffect(() => {
-    // load texture
-    const loader = new TextureLoader()
-    loader.load(mapTile.getTexture('terrain'), (texture) => {
-      terrainTexture.current = texture
-      matRef.current!.needsUpdate = true
-    })
-    loader.load(mapTile.getTexture('satellite'), (texture) => {
-      albedoTexture.current = texture
-      matRef.current!.needsUpdate = true
-    })
-  }, [])
+
   const [fs, setFs] = useState(mainFrag)
+  const [vs, setVs] = useState(mainVert)
   import.meta.hot?.accept('./main.frag', (newModule) => {
     setFs(newModule!.default)
+    matRef.current!.needsUpdate = true
+  })
+  import.meta.hot?.accept('./main.vert', (newModule) => {
+    setVs(newModule!.default)
     matRef.current!.needsUpdate = true
   })
   useUniforms(matRef, (state) => {
@@ -57,47 +52,88 @@ export function Terrain({
       iTime: {
         value: state.clock.elapsedTime,
       },
-      iExposure: { value: 20 },
+      iMultiScattering: {
+        value: multiScattering?.current,
+      },
+      iExposure: { value: 5 },
       iTerrainTexture: { value: terrainTexture.current },
       iAlbedoTexture: { value: albedoTexture.current },
     }
   })
+  return <shaderMaterial ref={matRef} vertexShader={vs} fragmentShader={fs} />
+}
 
-  // return (
-  //   <>
-  //     <ScreenQuad>
-  //       <shaderMaterial
-  //         ref={matRef}
-  //         fragmentShader={/*glsl*/`
-  //         precision highp sampler3D;
-  //         uniform float iTime;
-  //         uniform sampler3D iAerialPerspective;
+function TerrainTile({
+  aerialPerspective,
+  transmittance,
+  irradiance,
+  sunDirection,
+  multiScattering,
+  coords,
+  res = 128,
+}: SkyContext & {
+  coords: [number, number, number]
+  res?: number
+}) {
+  const centerCoord = [181, 343, 10]
+  const mapTile = new MapTile(...coords)
+  // const mapTile = new MapTile(389, 578, 10)
+  const terrainTexture = useRef<Texture>()
+  const albedoTexture = useRef<Texture>()
+  useEffect(() => {
+    // load texture
+    const loader = new TextureLoader()
+    loader.load(mapTile.getTexture('terrain'), (texture) => {
+      terrainTexture.current = texture
+    })
+    loader.load(mapTile.getTexture('satellite'), (texture) => {
+      albedoTexture.current = texture
+    })
+  }, [coords])
 
-  //         in vec2 vUv;
-
-  //         void main() {
-  //           vec3 uvw = vec3(vUv, sin(iTime));
-  //           vec3 color = texture(iAerialPerspective, uvw).rgb;
-  //           gl_FragColor = vec4(vUv, 0., 1.0);
-
-  //           // #include <tonemapping_fragment>
-  //         }
-  //         `}
-  //         vertexShader={vertPass}
-  //       />
-  //     </ScreenQuad>
-  //   </>
-  // )
+  const s = 24
+  const position = new Vector3(
+    (coords[0] - centerCoord[0]) * s,
+    (centerCoord[1] - coords[1]) * s,
+    0
+  )
 
   // dynamic LOD
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[10, 10, 514, 514]} />
-      <shaderMaterial
-        ref={matRef}
-        vertexShader={mainVert}
-        fragmentShader={fs}
-      />
-    </mesh>
+    <group rotation={[-Math.PI / 2, 0, 0]} >
+      <mesh position={position}>
+        <planeGeometry args={[s, s, res, res]} />
+        <TerrainMaterial
+          aerialPerspective={aerialPerspective}
+          transmittance={transmittance}
+          irradiance={irradiance}
+          sunDirection={sunDirection}
+          multiScattering={multiScattering}
+          terrainTexture={terrainTexture}
+          albedoTexture={albedoTexture}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+export function Terrain(ctx: SkyContext) {
+  const centerTile = [181, 343, 10];
+  const N = 7;
+  const O = Math.floor(N / 2);
+  const nByNGrid = Array.from({ length: N * N }, (_, i) => {
+    const x = i % N;
+    const y = Math.floor(i / N);
+    return [x, y];
+  }).map(([x, y]) => {
+    const [cx, cy, cz] = centerTile;
+    return [cx + x - O, cy + y - O, cz];
+  });
+  return (
+    <>
+      {nByNGrid.map(([x, y, z]) => (
+        <TerrainTile coords={[x, y, z]} {...ctx} />
+      ))}
+    </>
   )
 }

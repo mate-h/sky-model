@@ -9,6 +9,7 @@ import {
   Data3DTexture,
   ClampToEdgeWrapping,
   Texture,
+  ShaderMaterial,
 } from 'three'
 import transmittanceFragment from './transmittance.frag'
 import scatteringFragment from './scattering.frag'
@@ -17,7 +18,7 @@ import irradianceFragment from './irradiance.frag'
 import aerialFragment from './aerial.frag'
 import imageFragment from './image.frag'
 import testFragment from './test.frag'
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { ShaderPass } from '../shader/pass'
 import vertexPass from '../shader/pass.vert'
 import { ScreenQuad } from '@react-three/drei'
@@ -58,11 +59,14 @@ function use3DRenderTarget({
   }, [width, height, depth])
 }
 
+const sunDirection = new Vector3(0, .2, -1).normalize();
+
 export type SkyContext = {
+  sunDirection?: React.MutableRefObject<Vector3 | undefined>
   aerialPerspective?: React.MutableRefObject<Data3DTexture | undefined>
   transmittance?: React.MutableRefObject<Texture | undefined>
   irradiance?: React.MutableRefObject<Texture | undefined>
-  sunDirection?: React.MutableRefObject<Vector3 | undefined>
+  multiScattering?: React.MutableRefObject<Texture | undefined>
 }
 
 export function Sky({
@@ -70,9 +74,10 @@ export function Sky({
   transmittance,
   irradiance,
   sunDirection: sunDir,
+  multiScattering,
 }: SkyContext) {
   const transmittanceTexture = useRenderTarget()
-  const scatteringTexture = useRenderTarget()
+  const multiScatteringTexture = useRenderTarget()
   const skyviewTexture = useRenderTarget()
   const irradianceTexture = useRenderTarget()
   const aerialPerspectiveTexture = use3DRenderTarget({
@@ -80,8 +85,6 @@ export function Sky({
     height: 32,
     depth: 32,
   })
-
-  const sunDirection = useMemo(() => new Vector3(0, 0, -1).normalize(), [])
 
   const getUniforms = (state: RootState) => {
     const w = state.size.width * state.viewport.dpr
@@ -100,23 +103,33 @@ export function Sky({
     if (transmittance) {
       transmittance.current = transmittanceTexture.texture
     }
+    if (multiScattering) {
+      multiScattering.current = multiScatteringTexture.texture
+    }
 
     return {
       iResolution: { value: [w, h, 0] },
       iCameraWorld: { value: state.camera.matrixWorld },
       iCameraProjectionInverse: { value: state.camera.projectionMatrixInverse },
       iTransmittance: { value: transmittanceTexture?.texture },
-      iScattering: { value: scatteringTexture?.texture },
+      iMultiScattering: { value: multiScatteringTexture?.texture },
       iIrradiance: { value: irradianceTexture?.texture },
       iSkyview: { value: skyviewTexture?.texture },
       iAerialPerspective: { value: aerialPerspectiveTexture?.texture },
       iTime: { value: t + 3 },
       iSunDirection: { value: sunDirection },
-      iExposure: { value: 20 },
+      iExposure: { value: 5 },
     }
   }
 
   let testing = false
+
+  const matRef = useRef<ShaderMaterial>(null)
+  const [fs, setFs] = useState(imageFragment)
+  import('./image.frag').then((m) => {
+    setFs(m.default)
+    matRef.current!.needsUpdate = true
+  })
 
   return (
     <>
@@ -129,7 +142,7 @@ export function Sky({
       <ShaderPass
         fragmentShader={scatteringFragment}
         uniforms={getUniforms}
-        renderTarget={scatteringTexture}
+        renderTarget={multiScatteringTexture}
       />
 
       <ShaderPass
@@ -162,10 +175,11 @@ export function Sky({
 
       {!testing && <ScreenQuad>
         <UniformMaterial
+          ref={matRef}
           depthTest={false}
           vertexShader={vertexPass}
           uniforms={getUniforms}
-          fragmentShader={imageFragment}
+          fragmentShader={fs}
         />
       </ScreenQuad>}
 

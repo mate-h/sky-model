@@ -1,6 +1,7 @@
 #include uniforms
 #include common
 #include ray
+#include raymarch
 
 vec3 getValFromSkyLUT(vec3 rayDir, vec3 sunDir) {
   vec3 ro = getCameraPosition();
@@ -54,6 +55,11 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   cameraRay(rayOrigin, rayDir);
 
   vec3 lum = getValFromSkyLUT(rayDir, sunDir);
+
+  // calculate the sky luminance
+  vec3 transmittance, inscatter;
+  float tMax = rayIntersectScene(rayOrigin, rayDir);
+  // raymarchScattering(rayOrigin, rayDir, iSunDirection, tMax, 128., transmittance, lum, inscatter);
 
   // Bloom should be added at the end, but this is subtle and works well.
   vec3 sunLum = sunWithBloom(rayDir, sunDir);

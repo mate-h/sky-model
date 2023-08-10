@@ -46,6 +46,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   vec3 sunDir = normalize(vec3(0.0, sunCosTheta, -sin(sunTheta)));
 
   fragColor = vec4(computeIrradiance(pos, sunDir), 1.0);
+
+  fragColor.rgb = vec3(0.);
 }
 
 void main() {

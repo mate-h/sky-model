@@ -17,16 +17,18 @@ export default function () {
   const irradiance = useRef<Texture>()
   const transmittance = useRef<Texture>()
   const sunDirection = useRef<Vector3>()
+  const multiScattering = useRef<Texture>()
   return (
     <>
-      <Canvas camera={{ fov: 70, position: [0, 1.3, 6] }}>
-        {/* <Perf /> */}
+      <Canvas camera={{ position: [20, 10, 90] }}>
+        <Perf />
         {/* <fog attach="fog" /> */}
         <Sky
           aerialPerspective={aerialPerspective}
           irradiance={irradiance}
           transmittance={transmittance}
           sunDirection={sunDirection}
+          multiScattering={multiScattering}
         />
 
         <Terrain
@@ -34,6 +36,7 @@ export default function () {
           irradiance={irradiance}
           transmittance={transmittance}
           sunDirection={sunDirection}
+          multiScattering={multiScattering}
         />
 
         {/* <TerrainDebug

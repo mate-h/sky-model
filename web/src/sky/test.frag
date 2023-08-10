@@ -13,8 +13,8 @@ void main() {
 
   // texture values
   vec4 value = texture(iAerialPerspective, uvw);
-  // value = texture(iTransmittance, uv);
-  // value = texture(iIrradiance, uv);
+  value = texture(iTransmittance, uv);
+  value = texture(iIrradiance, uv);
   // value = texture(iSkyview, uv);
   // value.a = 1.0;
   // value = texture(iSkyview, uv);
@@ -35,7 +35,7 @@ void main() {
   // gl_FragColor = vec4(vec3(meanSquaredError), 1.0);
 
   // plot texture value in gl_FragColor
-  gl_FragColor = vec4(value.xyz * value.a * iExposure, value.a);
+  gl_FragColor = vec4(value.xyz * value.a, value.a);
 
   // #include <tonemapping_fragment>
 }

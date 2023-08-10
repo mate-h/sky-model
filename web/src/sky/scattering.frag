@@ -106,7 +106,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   vec3 lum, f_ms;
   getMulScattValues(pos, sunDir, lum, f_ms);
 
-    // Equation 10 from the paper.
+  // Equation 10 from the paper.
   vec3 psi = lum / (1.0 - f_ms);
   fragColor = vec4(psi, 1.0);
 }

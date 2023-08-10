@@ -31,7 +31,7 @@ void raymarchScattering(
     vec3 sampleTransmittance = exp(-dt * extinction);
 
     vec3 sunTransmittance = getValFromTLUT(iTransmittance, iResolution.xy, newPos, sunDir);
-    vec3 psiMS = getValFromMultiScattLUT(iScattering, iResolution.xy, newPos, sunDir);
+    vec3 psiMS = getValFromMultiScattLUT(iMultiScattering, iResolution.xy, newPos, sunDir);
 
     vec3 rayleighInScattering = rayleighScattering * (rayleighPhaseValue * sunTransmittance + psiMS);
     vec3 mieInScattering = mieScattering * (miePhaseValue * sunTransmittance + psiMS);
@@ -46,7 +46,7 @@ void raymarchScattering(
 
     float weight = (i == 0.0 || i == numSteps) ? 0.5 : 1.0;
     skyLuminance += weight * scatteringIntegral * transmittance;
-    inscattering += weight * currentScattering * dt;
+    inscattering += weight * currentScattering * dt * transmittance;
 
     transmittance *= sampleTransmittance;
 
