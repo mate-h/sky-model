@@ -86,7 +86,7 @@ float safeacos(const float x) {
 float rayIntersectSphere(vec3 ro, vec3 rd, float rad) {
   float b = dot(ro, rd);
   float c = dot(ro, ro) - rad * rad;
-  if(c > 0.0f && b > 0.0)
+  if(c > 0.0 && b > 0.0)
     return -1.0;
   float discr = b * b - c;
   if(discr < 0.0)
@@ -96,6 +96,24 @@ float rayIntersectSphere(vec3 ro, vec3 rd, float rad) {
     return (-b + sqrt(discr));
   return -b - sqrt(discr);
 }
+
+vec2 rayIntersectSphere2D(
+  vec3 start, // starting position of the ray
+  vec3 dir, // the direction of the ray
+  float radius // and the sphere radius
+) {
+  // ray-sphere intersection that assumes
+  // the sphere is centered at the origin.
+  // No intersection when result.x > result.y
+  float a = dot(dir, dir);
+  float b = 2.0 * dot(dir, start);
+  float c = dot(start, start) - (radius * radius);
+  float d = (b * b) - 4.0 * a * c;
+  if(d < 0.0)
+    return vec2(1e5, -1e5);
+  return vec2((-b - sqrt(d)) / (2.0 * a), (-b + sqrt(d)) / (2.0 * a));
+}
+
 float rayIntersectScene(in vec3 ro, in vec3 rayDir) {
   float atmoDist = rayIntersectSphere(ro, rayDir, atmosphereRadiusMM);
   float groundDist = rayIntersectSphere(ro, rayDir, groundRadiusMM);

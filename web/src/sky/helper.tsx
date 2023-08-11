@@ -35,7 +35,7 @@ export function SunHelper({
       o.getWorldQuaternion(q)
       directionTarget.copy(startDirection).applyQuaternion(q)
       if (direction) {
-        direction.lerp(directionTarget, damping)
+        direction.lerp(directionTarget, damping).normalize();
       }
     }
   })

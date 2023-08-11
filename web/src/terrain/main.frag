@@ -74,7 +74,25 @@ void main() {
   vec3 sky_irradiance = getValFromIrradianceLUT(iIrradiance, iResolution.xy, pos, iSunDirection);
 
   #ifndef USE_LUT
-  raymarchScattering(ro, rd, iSunDirection, dist, 8., transmittance, sky_irradiance, in_scatter);
+
+  vec2 atmos_intercept = rayIntersectSphere2D(ro, rd, atmosphereRadiusMM);
+  float terra_intercept = rayIntersectSphere(ro, rd, groundRadiusMM);
+  float mindist, maxdist = dist;
+  if(atmos_intercept.x < atmos_intercept.y) {
+    mindist = atmos_intercept.x > 0.0 ? atmos_intercept.x : 0.0;
+  }
+  if(length(ro) < atmosphereRadiusMM) {
+    mindist = 0.0;
+  }
+
+  if (length(ro) < groundRadiusMM) {
+    // start on ground and end in atmosphere top
+    mindist = terra_intercept;
+  }
+
+  vec3 rayStart = ro + mindist * rd;
+  float tMax = maxdist - mindist;
+  raymarchScattering(rayStart, rd, iSunDirection, tMax, 8., transmittance, sky_irradiance, in_scatter);
   #endif
 
   // calculate the indirect irradiance 

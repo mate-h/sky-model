@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useUniforms } from '../shader/uniforms'
 import { SkyContext } from '../sky'
 import { MapTile } from './lib'
+import { globalUniforms } from '../controls'
 
 function TerrainMaterial({
   aerialPerspective,
@@ -55,13 +56,19 @@ function TerrainMaterial({
       iMultiScattering: {
         value: multiScattering?.current,
       },
-      iExposure: { value: 5 },
       iTerrainTexture: { value: terrainTexture.current },
       iAlbedoTexture: { value: albedoTexture.current },
+      ...globalUniforms,
     }
   })
   return <shaderMaterial ref={matRef} vertexShader={vs} fragmentShader={fs} />
 }
+
+let centerCoord = [181, 343, 10]
+let s = 26
+// centerCoord = [192, 401, 10]
+// centerCoord = [165, 360, 10]
+// centerCoord = [840, 535, 10]; s = 38
 
 function TerrainTile({
   aerialPerspective,
@@ -75,7 +82,6 @@ function TerrainTile({
   coords: [number, number, number]
   res?: number
 }) {
-  const centerCoord = [181, 343, 10]
   const mapTile = new MapTile(...coords)
   // const mapTile = new MapTile(389, 578, 10)
   const terrainTexture = useRef<Texture>()
@@ -91,7 +97,6 @@ function TerrainTile({
     })
   }, [coords])
 
-  const s = 24
   const position = new Vector3(
     (coords[0] - centerCoord[0]) * s,
     (centerCoord[1] - coords[1]) * s,
@@ -118,7 +123,6 @@ function TerrainTile({
 }
 
 export function Terrain(ctx: SkyContext) {
-  const centerTile = [181, 343, 10];
   const N = 7;
   const O = Math.floor(N / 2);
   const nByNGrid = Array.from({ length: N * N }, (_, i) => {
@@ -126,7 +130,7 @@ export function Terrain(ctx: SkyContext) {
     const y = Math.floor(i / N);
     return [x, y];
   }).map(([x, y]) => {
-    const [cx, cy, cz] = centerTile;
+    const [cx, cy, cz] = centerCoord;
     return [cx + x - O, cy + y - O, cz];
   });
   return (

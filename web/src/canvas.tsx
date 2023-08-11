@@ -4,9 +4,26 @@ import { Sky } from './sky'
 import { Perf } from 'r3f-perf'
 import { Terrain } from './terrain/shaded'
 import { useRef } from 'react'
-import { Data3DTexture, Texture, Vector3 } from 'three'
+import { Data3DTexture, LineBasicMaterial, Texture, Vector3 } from 'three'
 import { TerrainDisplaced } from './terrain/displaced'
 import { TerrainDebug } from './terrain/debug'
+import { useAtom } from 'jotai'
+import { debugAtom } from './controls'
+
+function Debug() {
+  const [debug] = useAtom(debugAtom)
+  if (!debug) return null
+  return (
+    <>
+      <Perf position="top-left" />
+      <gridHelper
+        position={[0, 3, 0]}
+        args={[1000, 100, 0xffffff, 0xffffff]}
+      />
+      <axesHelper args={[10]} position={[0, 3.01, 0]}/>
+    </>
+  )
+}
 
 export default function () {
   // const space = 3
@@ -21,7 +38,7 @@ export default function () {
   return (
     <>
       <Canvas camera={{ position: [20, 10, 90] }}>
-        <Perf />
+        <Debug />
         {/* <fog attach="fog" /> */}
         <Sky
           aerialPerspective={aerialPerspective}
@@ -49,9 +66,6 @@ export default function () {
         /> */}
 
         {/* <Test /> */}
-
-        <gridHelper />
-        <axesHelper />
 
         {/* <mesh position={[getX(0), 0, 0]}>
           <sphereGeometry />

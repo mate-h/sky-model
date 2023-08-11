@@ -24,6 +24,7 @@ import vertexPass from '../shader/pass.vert'
 import { ScreenQuad } from '@react-three/drei'
 import { SunHelper } from './helper'
 import { UniformMaterial } from '../shader/uniforms'
+import { globalUniforms } from '../controls'
 
 function useRenderTarget() {
   const opts = {
@@ -118,7 +119,7 @@ export function Sky({
       iAerialPerspective: { value: aerialPerspectiveTexture?.texture },
       iTime: { value: t + 3 },
       iSunDirection: { value: sunDirection },
-      iExposure: { value: 5 },
+      ...globalUniforms,
     }
   }
 
