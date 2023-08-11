@@ -56,6 +56,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
   // calculate the sky luminance
   vec3 lum, transmittance;
+  float atmosphereRadiusMM = getAtmosphereSize();
   if(length(rayOrigin) < atmosphereRadiusMM * 1.0 && false) {
     lum = getValFromSkyLUT(rayDir, sunDir);
     transmittance = getValFromTLUT(iTransmittance, iResolution.xy, rayOrigin, sunDir);
@@ -80,8 +81,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     if(terra_intercept > 0.0) {
       maxdist = terra_intercept;
 
-      fragColor = vec4(0.0, 0.0, 0.0, 1.0);
-      return;
+      // fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      // return;
     }
     if (length(rayOrigin) < groundRadiusMM) {
       // start on ground and end in atmosphere top

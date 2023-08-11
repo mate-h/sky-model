@@ -25,42 +25,9 @@ import { ScreenQuad } from '@react-three/drei'
 import { SunHelper } from './helper'
 import { UniformMaterial } from '../shader/uniforms'
 import { globalUniforms } from '../controls'
+import { use3DRenderTarget, useRenderTarget } from '../shader/target'
 
-function useRenderTarget() {
-  const opts = {
-    type: HalfFloatType,
-  }
-  const { size, viewport } = useThree()
-  return useMemo(() => {
-    const w = size.width * viewport.dpr
-    const h = size.height * viewport.dpr
-    return new WebGLRenderTarget(w, h, opts)
-  }, [size, viewport])
-}
-
-function use3DRenderTarget({
-  width,
-  height,
-  depth,
-}: {
-  width: number
-  height: number
-  depth: number
-}) {
-  return useMemo(() => {
-    const target = new WebGL3DRenderTarget(width, height, depth)
-    const tex = target.texture
-    tex.format = RGBAFormat
-    tex.type = HalfFloatType
-    tex.minFilter = LinearFilter
-    tex.magFilter = LinearFilter
-    tex.generateMipmaps = false
-    tex.wrapS = tex.wrapT = tex.wrapR = ClampToEdgeWrapping
-    return target
-  }, [width, height, depth])
-}
-
-const sunDirection = new Vector3(0, .2, -1).normalize();
+export const sunDirection = new Vector3(0, .2, -1).normalize();
 
 export type SkyContext = {
   sunDirection?: React.MutableRefObject<Vector3 | undefined>

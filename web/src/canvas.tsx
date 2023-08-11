@@ -1,10 +1,10 @@
 import { Loader, OrbitControls } from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { Sky } from './sky'
 import { Perf } from 'r3f-perf'
 import { Terrain } from './terrain/shaded'
 import { useRef } from 'react'
-import { Data3DTexture, LineBasicMaterial, Texture, Vector3 } from 'three'
+import { Data3DTexture, LineBasicMaterial, PCFShadowMap, Texture, Vector3, WebGLShadowMap } from 'three'
 import { TerrainDisplaced } from './terrain/displaced'
 import { TerrainDebug } from './terrain/debug'
 import { useAtom } from 'jotai'
@@ -37,7 +37,10 @@ export default function () {
   const multiScattering = useRef<Texture>()
   return (
     <>
-      <Canvas camera={{ position: [20, 10, 90] }}>
+      <Canvas shadows={{
+        type: PCFShadowMap,
+        
+        }} camera={{ position: [2, 5, 15] }}>
         <Debug />
         {/* <fog attach="fog" /> */}
         <Sky
@@ -84,7 +87,7 @@ export default function () {
 
         <OrbitControls makeDefault />
       </Canvas>
-      <Loader />
+      {/* <Loader /> */}
     </>
   )
 }

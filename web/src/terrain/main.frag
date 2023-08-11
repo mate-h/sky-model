@@ -74,7 +74,7 @@ void main() {
   vec3 sky_irradiance = getValFromIrradianceLUT(iIrradiance, iResolution.xy, pos, iSunDirection);
 
   #ifndef USE_LUT
-
+  float atmosphereRadiusMM = getAtmosphereSize();
   vec2 atmos_intercept = rayIntersectSphere2D(ro, rd, atmosphereRadiusMM);
   float terra_intercept = rayIntersectSphere(ro, rd, groundRadiusMM);
   float mindist, maxdist = dist;

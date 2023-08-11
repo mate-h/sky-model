@@ -1,7 +1,9 @@
 import { TransformControls } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
+import { useAtom } from 'jotai'
 import { useLayoutEffect, useRef } from 'react'
 import { Quaternion, Vector3 } from 'three'
+import { debugAtom } from '../controls'
 
 const q = new Quaternion()
 const startDirection = new Vector3(0, 0, -1)
@@ -16,19 +18,21 @@ type Props = {
 
 export function SunHelper({
   children,
-  enabled = true,
   direction,
   damping = 0.05,
 }: Props) {
   const controlsRef = useRef<any>()
+  const [debug] = useAtom(debugAtom)
   useLayoutEffect(() => {
+    if (!debug) return;
     // set default direction to direction prop
     controlsRef.current!.object.quaternion.setFromUnitVectors(
       new Vector3(0, 0, -1),
       direction
     )
-  }, [])
+  }, [debug])
   useFrame(() => {
+    if (!debug) return;
     if (!controlsRef.current) return
     const o = controlsRef.current.object as THREE.Object3D
     if (o) {
@@ -39,10 +43,11 @@ export function SunHelper({
       }
     }
   })
-  if (!enabled) return <>{children}</>
+  
+  if (!debug) return <>{children}</>
   return (
     <>
-      <TransformControls ref={controlsRef} mode="rotate" showY={false} showZ={false}>
+      <TransformControls ref={controlsRef} mode="rotate">
         <group>
           <arrowHelper args={[direction]} />
           {children}

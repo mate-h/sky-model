@@ -40,6 +40,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
   float sunCosTheta = 2.0 * u - 1.0;
   float sunTheta = safeacos(sunCosTheta);
+  float atmosphereRadiusMM = getAtmosphereSize();
   float height = mix(groundRadiusMM, atmosphereRadiusMM, v);
 
   vec3 pos = vec3(0.0, height, 0.0);

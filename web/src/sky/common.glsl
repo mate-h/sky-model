@@ -3,7 +3,12 @@ const float RAD = 180.0 / PI;
 
 // Units are in megameters.
 const float groundRadiusMM = 6.360;
-const float atmosphereRadiusMM = 6.460;
+
+float getAtmosphereSize() {
+  float atmosphereSizeMM = iAtmosphereSize * 0.001;
+  float atmosphereRadiusMM = 6.360 + atmosphereSizeMM;
+  return atmosphereRadiusMM;
+}
 
 // on the north pole
 const vec3 viewPos = vec3(0.0, groundRadiusMM, 0.0);
@@ -63,9 +68,12 @@ void getScatteringValues(
   out vec3 extinction // sigma_e
 ) {
   float altitudeKM = (length(pos) - groundRadiusMM) * 1000.0;
+
+  float scalar = iAtmosphereSize * 0.01;
+
   // Note: Paper gets these switched up.
-  float rayleighDensity = exp(-altitudeKM / 8.0);
-  float mieDensity = exp(-altitudeKM / 1.2);
+  float rayleighDensity = exp(-altitudeKM / (8.0 * scalar));
+  float mieDensity = exp(-altitudeKM / (1.2 * scalar));
 
   rayleighScattering = rayleighScatteringBase * rayleighDensity;
   float rayleighAbsorption = rayleighAbsorptionBase * rayleighDensity;
@@ -73,7 +81,7 @@ void getScatteringValues(
   mieScattering = mieScatteringBase * mieDensity;
   float mieAbsorption = mieAbsorptionBase * mieDensity;
 
-  vec3 ozoneAbsorption = ozoneAbsorptionBase * max(0.0, 1.0 - abs(altitudeKM - 25.0) / 15.0);
+  vec3 ozoneAbsorption = ozoneAbsorptionBase * max(0.0, 1.0 - abs(altitudeKM - (25.0 * scalar)) / (15.0 * scalar));
 
   extinction = rayleighScattering + rayleighAbsorption + mieScattering + mieAbsorption + ozoneAbsorption;
 }
@@ -115,6 +123,7 @@ vec2 rayIntersectSphere2D(
 }
 
 float rayIntersectScene(in vec3 ro, in vec3 rayDir) {
+  float atmosphereRadiusMM = getAtmosphereSize();
   float atmoDist = rayIntersectSphere(ro, rayDir, atmosphereRadiusMM);
   float groundDist = rayIntersectSphere(ro, rayDir, groundRadiusMM);
   float tMax = (groundDist < 0.0) ? atmoDist : groundDist;
@@ -125,6 +134,7 @@ float rayIntersectScene(in vec3 ro, in vec3 rayDir) {
  * Same parameterization here.
  */
 vec3 getValFromTLUT(sampler2D tex, vec2 bufferRes, vec3 pos, vec3 sunDir) {
+  float atmosphereRadiusMM = getAtmosphereSize();
   float height = length(pos);
   vec3 up = pos / height;
   float sunCosZenithAngle = dot(sunDir, up);
@@ -134,6 +144,7 @@ vec3 getValFromTLUT(sampler2D tex, vec2 bufferRes, vec3 pos, vec3 sunDir) {
 }
 
 vec3 getValFromMultiScattLUT(sampler2D tex, vec2 bufferRes, vec3 pos, vec3 sunDir) {
+  float atmosphereRadiusMM = getAtmosphereSize();
   float height = length(pos);
   vec3 up = pos / height;
   float sunCosZenithAngle = dot(sunDir, up);
@@ -143,6 +154,7 @@ vec3 getValFromMultiScattLUT(sampler2D tex, vec2 bufferRes, vec3 pos, vec3 sunDi
 }
 
 vec3 getValFromIrradianceLUT(sampler2D tex, vec2 bufferRes, vec3 pos, vec3 sunDir) {
+  float atmosphereRadiusMM = getAtmosphereSize();
   float height = length(pos);
   vec3 up = pos / height;
   float sunCosZenithAngle = dot(sunDir, up);
