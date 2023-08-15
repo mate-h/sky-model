@@ -137,12 +137,10 @@ export function TerrainStandardMaterial({
     shader.fragmentShader = shader.fragmentShader.replace(glsl`void main() {`, glsl`${pbrFrag}\nvoid main() {`)
     shader.fragmentShader = shader.fragmentShader.replace(
       glsl`#include <output_fragment>`,
-      glsl`#include <output_fragment>\napplySkyLighting(diffuseColor.rgb, normal, gl_FragColor);` +
+      glsl`applySkyLighting(diffuseColor.rgb, normal, outgoingLight);\n  #include <output_fragment>` +
         // prettier-ignore
         ``
     )
-
-    console.log(shader.fragmentShader)
   }
 
   useFrame((state) => {

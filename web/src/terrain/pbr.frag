@@ -6,10 +6,7 @@
 in vec2 vUv;
 in vec3 vWorldPosition;
 
-void applySkyLighting(in vec3 albedo, in vec3 normal, inout vec4 outgoingLight) {// inout ReflectedLight reflectedLight) {
-
-  return;
-  
+void applySkyLighting(in vec3 albedo, in vec3 viewNormal, inout vec3 outgoingLight) {
   vec3 ro, rd;
   cameraRay(ro, rd);
   vec3 pos = transformPosition(vWorldPosition);
@@ -25,33 +22,34 @@ void applySkyLighting(in vec3 albedo, in vec3 normal, inout vec4 outgoingLight) 
   if(length(ro) < atmosphereRadiusMM) {
     mindist = 0.0;
   }
-  if (length(ro) < groundRadiusMM) {
+  if(length(ro) < groundRadiusMM) {
     mindist = terra_intercept;
   }
   vec3 rayStart = ro + mindist * rd;
   float tMax = maxdist - mindist;
-  vec3 transmittance, sky_irradiance, in_scatter;
-  raymarchScattering(rayStart, rd, iSunDirection, tMax, 8., transmittance, sky_irradiance, in_scatter);
+  vec3 transmittance, radiance, in_scatter;
+  raymarchScattering(rayStart, rd, iSunDirection, tMax, 8., transmittance, radiance, in_scatter);
+
+  vec3 normal = texture2D(normalMap, vNormalMapUv).xyz;
+  normal = normalize(2.0 * normal - 1.0); // Usually normal maps are stored in [0,1], so this maps it to [-1,1]
+  normal = vec3(normal.x, normal.z, -normal.y);
+
+  float shadow = getShadow( directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, directionalLightShadows[0].shadowBias, directionalLightShadows[0].shadowRadius, vDirectionalShadowCoord[0] );
+
   vec3 sun_transmittance = getValFromTLUT(iTransmittance, iResolution.xy, pos, iSunDirection);
-  vec3 sun_irradiance = sun_transmittance * solar_irradiance * max(dot(normal, iSunDirection), 0.0);
+  vec3 direct_irradiance = sun_transmittance * solar_irradiance * max(dot(normal, iSunDirection), 0.0) * shadow;
+  vec3 irradiance = getValFromIrradianceLUT(iIrradiance, iResolution.xy, pos, iSunDirection);
+  vec3 sky_irradiance = irradiance * (1.0 + dot(normal, pos) / length(pos)) * 0.5;
+  vec3 ambient_occlusion = vec3(1.0); // TODO pbr maps
+  vec3 indirect_irradiance = sky_irradiance * ambient_occlusion;
 
-  // reflectedLight.directSpecular = vec3(0.);
-  // reflectedLight.indirectSpecular = vec3(0.);
-  // reflectedLight.directDiffuse = vec3(0.);
-  // reflectedLight.indirectDiffuse = vec3(0.);
-  // outgoingLight = albedo * (1.0 / pi) * (sun_irradiance + sky_irradiance);
-  // // outgoingLight = albedo * (1.0 / pi) * sky_irradiance * transmittance;
-  // outgoingLight.rgb = albedo * (1.0 / pi) * (sun_irradiance);
-  // outgoingLight.rgb *= transmittance;
-  outgoingLight.rgb += in_scatter;
+  // lambertian
+  outgoingLight = albedo * (1.0 / pi) * (direct_irradiance + indirect_irradiance);
 
-  // vec3 o = vec3(0.);
-  // o = newPos;
-  // o.g = 0.;
-  // o = normal * 0.5 + 0.5;
-  // o = vec3(vUv, 0.);
+  // aerial perspective
+  outgoingLight *= transmittance;
+  outgoingLight += in_scatter;
 
-  // reflectedLight.directDiffuse = o;
-  
-  // modulate indirect lighting by ambient occlusion
+  // outgoingLight = vWorldPosition / 13.;
+  // outgoingLight = normal * 0.5 + 0.5;
 }

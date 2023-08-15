@@ -31,7 +31,7 @@ vec3 getNormal(vec3 pos, vec2 uv) {
   return n;
 }
 
-#define USE_LUT
+// #define USE_LUT
 
 void main() {
   vec3 ro, rd;
@@ -114,7 +114,11 @@ void main() {
   fragColor.rgb = radiance;
   fragColor.a = 1.0;
 
+  // fragColor.rgb = vPosition / 13.;
+  // fragColor.rgb = normal * .5 + .5;
+
   gl_FragColor = fragColor;
 
   #include <tonemapping_fragment>
+  gl_FragColor = LinearTosRGB(gl_FragColor);
 }

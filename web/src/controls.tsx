@@ -11,8 +11,7 @@ export const controlsAtom = atom<Controls>({
   debug: false,
   terrainSize: 1,
   standardMaterial: false,
-  useLUTs: false,
-  exposure: 10,
+  exposure: 3,
   atmosphereSize: 100,
   toneMapping: 'ACESFilmicToneMapping',
 })
@@ -24,12 +23,14 @@ export type Controls = {
   atmosphereSize: number
   standardMaterial: boolean
   toneMapping: string
-  useLUTs: boolean
 }
 
 export default function () {
   const controls = useControls({
-    exposure: 10,
+    exposure: {
+      value: 3,
+      min: 0,
+    },
     debug: false,
     terrainSize: 1,
     atmosphereSize: 100,
@@ -38,7 +39,6 @@ export default function () {
       value: 'ACESFilmicToneMapping',
       options: ['NoToneMapping', 'LinearToneMapping', 'ReinhardToneMapping', 'CineonToneMapping', 'ACESFilmicToneMapping'],
     },
-    useLUTs: false,
   })
   const { exposure, debug, terrainSize, atmosphereSize, standardMaterial, toneMapping } = controls
   useFrame(({gl}) => {

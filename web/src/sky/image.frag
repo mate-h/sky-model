@@ -86,4 +86,5 @@ void main() {
   mainImage(gl_FragColor, gl_FragCoord.xy);
 
   #include <tonemapping_fragment>
+  gl_FragColor = LinearTosRGB(gl_FragColor);
 }
