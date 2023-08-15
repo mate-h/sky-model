@@ -13,7 +13,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   float u = clamp(fragCoord.x, 0.0, skyLUTRes.x - 1.0) / skyLUTRes.x;
   float v = clamp(fragCoord.y, 0.0, skyLUTRes.y - 1.0) / skyLUTRes.y;
 
-  float azimuthAngle = (u - 0.5) * 2.0 * PI;
+  float azimuthAngle = (u - 0.5) * 2.0 * pi;
   // Non-linear mapping of altitude. See Section 5.3 of the paper.
   float adjV;
   if(v < 0.5) {
@@ -27,8 +27,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   vec3 ro = getCameraPosition();
   float height = length(ro);
   vec3 up = ro / height;
-  float horizonAngle = safeacos(sqrt(height * height - groundRadiusMM * groundRadiusMM) / height) - 0.5 * PI;
-  float altitudeAngle = adjV * 0.5 * PI - horizonAngle;
+  float horizonAngle = safeacos(sqrt(height * height - groundRadiusMM * groundRadiusMM) / height) - 0.5 * pi;
+  float altitudeAngle = adjV * 0.5 * pi - horizonAngle;
 
   float cosAltitude = cos(altitudeAngle);
   vec3 rayDir = vec3(cosAltitude * sin(azimuthAngle), sin(altitudeAngle), -cosAltitude * cos(azimuthAngle));

@@ -5,7 +5,7 @@ void raymarchScattering(
   float tMax,
   float numSteps,
   out vec3 transmittance,
-  out vec3 skyLuminance,
+  out vec3 radiance,
   out vec3 inscattering
 ) {
   float cosTheta = dot(rayDir, sunDir);
@@ -13,7 +13,7 @@ void raymarchScattering(
   float miePhaseValue = getMiePhase(cosTheta);
   float rayleighPhaseValue = getRayleighPhase(-cosTheta);
 
-  skyLuminance = vec3(0.0);
+  radiance = vec3(0.0);
   transmittance = vec3(1.0);
   inscattering = vec3(0.0);
 
@@ -45,7 +45,7 @@ void raymarchScattering(
     }
 
     float weight = (i == 0.0 || i == numSteps) ? 0.5 : 1.0;
-    skyLuminance += weight * scatteringIntegral * transmittance;
+    radiance += weight * scatteringIntegral * transmittance;
     inscattering += weight * currentScattering * dt * transmittance;
 
     transmittance *= sampleTransmittance;

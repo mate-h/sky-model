@@ -1,35 +1,37 @@
 #include uniforms
 #include common
+#include raymarch
 
-// Number of steps for the numerical integration when computing the irradiance.
-const float IRRADIANCE_INTEGRATION_STEPS = 50.0;
-
-vec3 computeIrradiance(vec3 pos, vec3 sunDir) {
+vec3 computeIndirectIrradiance(vec3 pos, vec3 sunDir) {
+  const int SAMPLE_COUNT = 8;
+  const float dphi = pi / float(SAMPLE_COUNT);
+  const float dtheta = pi / float(SAMPLE_COUNT);
+  vec3 omega_s = vec3(sqrt(1.0 - sunDir.z * sunDir.z), 0.0, sunDir.z);
   vec3 irradiance = vec3(0.0);
-  float dt = 1.0 / IRRADIANCE_INTEGRATION_STEPS;
 
-  vec3 rayleighScattering_prev, extinction_prev;
-  float mieScattering_prev;
-  getScatteringValues(pos, rayleighScattering_prev, mieScattering_prev, extinction_prev);
+  for (int j = 0; j < SAMPLE_COUNT / 2; ++j) {
+    float theta = (float(j) + 0.5) * dtheta;
+    for (int i = 0; i < 2 * SAMPLE_COUNT; ++i) {
+      float phi = (float(i) + 0.5) * dphi;
+      vec3 omega =
+          vec3(cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
+      float domega = (dtheta) * (dphi) * sin(theta);
 
-  for(float i = 1.0; i <= IRRADIANCE_INTEGRATION_STEPS; i += 1.0) {
-    float newT = i * dt;
-    vec3 newPos = pos + newT * sunDir;
+      // Determine tMax for ray marching
+      float tMax = rayIntersectScene(pos, omega);
 
-    vec3 rayleighScattering, extinction;
-    float mieScattering;
-    getScatteringValues(newPos, rayleighScattering, mieScattering, extinction);
+      // Ray march along omega to compute transmittance, radiance, and inscattering
+      vec3 transmittance, radiance, inscattering;
+      raymarchScattering(pos, omega, sunDir, tMax, 8., transmittance, radiance, inscattering);
 
-    vec3 transmittance = exp(-newT * extinction);
-    irradiance += transmittance * (rayleighScattering + mieScattering + rayleighScattering_prev + mieScattering_prev) * dt / 2.0;
-
-    rayleighScattering_prev = rayleighScattering;
-    mieScattering_prev = mieScattering;
-    extinction_prev = extinction;
+      // Use inscattering as the integrand
+      irradiance += inscattering * omega.z * domega;
+    }
   }
 
   return irradiance;
 }
+
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   if(fragCoord.x >= (irradianceLUTRes.x + 1.5) || fragCoord.y >= (irradianceLUTRes.y + 1.5)) {
@@ -46,9 +48,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   vec3 pos = vec3(0.0, height, 0.0);
   vec3 sunDir = normalize(vec3(0.0, sunCosTheta, -sin(sunTheta)));
 
-  fragColor = vec4(computeIrradiance(pos, sunDir), 1.0);
+  fragColor = vec4(computeIndirectIrradiance(pos, sunDir), 1.0);
 
-  fragColor.rgb = vec3(0.);
+  // fragColor.rgb = vec3(0.);
 }
 
 void main() {

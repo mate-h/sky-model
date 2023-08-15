@@ -1,6 +1,3 @@
-#include fbm
-#include common
-
 uniform sampler2D iTerrainTexture;
 uniform float iTime;
 

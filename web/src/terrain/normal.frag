@@ -19,7 +19,7 @@ vec3 getNormal(vec3 pos, vec2 uv) {
   vec3 n3 = normalize(cross(p3 - pos, p4 - pos));
   vec3 n4 = normalize(cross(p4 - pos, p1 - pos));
   vec3 n = normalize(n1 + n2 + n3 + n4);
-  // rotate on x axis -PI/2
+  // rotate on x axis -pi/2
   // n = vec3(n.x, n.z, -n.y);
   return n;
 }

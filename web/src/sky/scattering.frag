@@ -24,9 +24,9 @@ void getMulScattValues(vec3 pos, vec3 sunDir, out vec3 lumTotal, out vec3 fms) {
   float invSamples = 1.0 / float(sqrtSamples * sqrtSamples);
   for(int i = 0; i < sqrtSamples; i++) {
     for(int j = 0; j < sqrtSamples; j++) {
-      // This integral is symmetric about theta = 0 (or theta = PI), so we
-      // only need to integrate from zero to PI, not zero to 2*PI.
-      float theta = PI * (float(i) + 0.5) / float(sqrtSamples);
+      // This integral is symmetric about theta = 0 (or theta = pi), so we
+      // only need to integrate from zero to pi, not zero to 2*pi.
+      float theta = pi * (float(i) + 0.5) / float(sqrtSamples);
       float phi = safeacos(1.0 - 2.0 * (float(j) + 0.5) / float(sqrtSamples));
       vec3 rayDir = getSphericalDir(theta, phi);
 

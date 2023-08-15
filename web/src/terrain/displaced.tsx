@@ -77,7 +77,6 @@ export function DisplacedTile({
       iTime: {
         value: state.clock.elapsedTime,
       },
-      iExposure: { value: 20 },
       iTerrainTexture: { value: terrainTexture },
     }
   })

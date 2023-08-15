@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { useAtom } from 'jotai'
 import { useLayoutEffect, useRef } from 'react'
 import { Quaternion, Vector3 } from 'three'
-import { debugAtom } from '../controls'
+import { useControls } from 'leva'
 
 const q = new Quaternion()
 const startDirection = new Vector3(0, 0, -1)
@@ -22,7 +22,7 @@ export function SunHelper({
   damping = 0.05,
 }: Props) {
   const controlsRef = useRef<any>()
-  const [debug] = useAtom(debugAtom)
+  const {debug} = useControls({debug: false});
   useLayoutEffect(() => {
     if (!debug) return;
     // set default direction to direction prop

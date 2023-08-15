@@ -10,6 +10,7 @@ type ShaderPassProps = {
   fragmentShader: string
   renderTarget: WebGLRenderTarget
   depthName?: string
+  once?: boolean
 }
 
 /**
@@ -21,11 +22,16 @@ export function ShaderPass({
   renderTarget,
   uniforms,
   depthName = 'iDepth',
+  once = false,
 }: ShaderPassProps) {
   const root = useRef<Scene>(null)
   const is3D = renderTarget.depth > 0
   const materialRef = useRef<ShaderMaterial>(null)
+  let frames = 0
   useFrame(({ gl, camera }) => {
+    if (once) {
+      if (frames > 0) return
+    }
     const scene = root.current!
     if (!scene || !renderTarget) return
     scene.visible = true
@@ -47,6 +53,9 @@ export function ShaderPass({
     }
     scene.visible = false
     gl.setRenderTarget(null)
+    frames += 1
+
+    
   })
   return (
     <scene ref={root}>

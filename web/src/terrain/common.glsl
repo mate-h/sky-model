@@ -18,11 +18,11 @@ float displacement(vec2 uv) {
 const float earthRadius = 1.;
 
 float tile2lon(float x, float z) {
-  return x / pow(2., z) * 2. * PI - PI;
+  return x / pow(2., z) * 2. * pi - pi;
 }
 
 float tile2lat(float y, float z) {
-  float n = PI - 2. * PI * y / pow(2., z);
+  float n = pi - 2. * pi * y / pow(2., z);
   return atan(0.5 * (exp(n) - exp(-n)));
 }
 

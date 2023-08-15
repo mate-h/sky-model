@@ -1,14 +1,14 @@
 vec3 uvToRd(vec2 uv) {
-  float phi = uv.x * 2. * PI + PI;
-  float theta = (1. - uv.y) * PI;
+  float phi = uv.x * 2. * pi + pi;
+  float theta = (1. - uv.y) * pi;
   return vec3(sin(theta) * cos(phi), cos(theta), sin(theta) * sin(phi));
 }
 
 vec2 rdToUv(vec3 rd) {
   float phi = atan(rd.z, rd.x);
   float theta = acos(rd.y);
-  float x = (phi + PI) / (2. * PI);
-  float y = 1. - theta / PI;
+  float x = (phi + pi) / (2. * pi);
+  float y = 1. - theta / pi;
   return vec2(x, y);
 }
 

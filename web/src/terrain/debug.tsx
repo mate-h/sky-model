@@ -35,7 +35,6 @@ export function TerrainDebug({ context }: { context: SkyContext }) {
       iTime: {
         value: state.clock.elapsedTime,
       },
-      iExposure: { value: 20 },
     }
   })
 

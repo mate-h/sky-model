@@ -1,5 +1,3 @@
-#define PI 3.1415926538
-
 #define OCTAVES 8
 #define Seed 0xfffff
 

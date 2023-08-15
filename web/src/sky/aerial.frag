@@ -16,23 +16,13 @@ void main() {
   vec2 uv = gl_FragCoord.xy / res.xy;
   cameraRayUv(ro, rd, uv);
 
-  // calculate the start and end of the corresponding view ray segment
-  // tmin and tmax are the distances to the near and far planes of the view frustum
-  float tmin = 0.0;
-
-  // units are in megameters
-  float tmax = aerialLutRange; // 32 km 
-
-  // generate vector along the view ray at intervals of 1 km
-  // iDepth is the current depth of the LUT goes from 0 to res.z - 1
-  // u ranges from 1./res.z - 1 to 1.
-
+  // generate vector along the view ray at specified intervals
   float t = (iDepth + 1.0) * aerialLutStep;
 
-  vec3 transmittance, luminance, inscattering;
-  raymarchScattering(ro, rd, iSunDirection, t, float(numScatteringSteps), transmittance, luminance, inscattering);
+  vec3 transmittance, radiance, inscattering;
+  raymarchScattering(ro, rd, iSunDirection, t, float(numScatteringSteps), transmittance, radiance, inscattering);
+  
   // Store the in-scattering in the RGB channels of the texture and the transmittance in the A channel
-  // The luminance is used to calculate the average luminance of the atmosphere
   vec4 fragColor;
   fragColor.rgb = inscattering;
 

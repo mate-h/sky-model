@@ -96,6 +96,7 @@ export function Sky({
   const [fs, setFs] = useState(imageFragment)
   import('./image.frag').then((m) => {
     setFs(m.default)
+    if (!matRef.current) return;
     matRef.current!.needsUpdate = true
   })
 

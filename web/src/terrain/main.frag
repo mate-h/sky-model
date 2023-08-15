@@ -2,8 +2,6 @@
 #include ../sky/common
 #include ../sky/ray
 #include ../sky/raymarch
-#include fbm
-#include common
 
 in vec2 vUv;
 in vec3 vPosition;
@@ -28,50 +26,22 @@ vec3 getNormal(vec3 pos, vec2 uv) {
   vec3 n3 = normalize(cross(p3 - pos, p4 - pos));
   vec3 n4 = normalize(cross(p4 - pos, p1 - pos));
   vec3 n = normalize(n1 + n2 + n3 + n4);
-  // rotate on x axis -PI/2
+  // rotate on x axis -pi/2
   n = vec3(n.x, n.z, -n.y);
   return n;
 }
 
-// #define USE_LUT
+#define USE_LUT
 
 void main() {
-  vec3 color;
-
   vec3 ro, rd;
   cameraRay(ro, rd);
-
   vec3 normal = getNormal(vPosition, vUv);
-
   vec3 pos = transformPosition(vPosition);
-
   // Calculate the distance from the camera to the current fragment position
   float dist = length(pos - ro);
 
-  float u = 0.001;
-  float iDepth = (dist / aerialLutStep) - 1.0;
-
-  // calculate the distance to the camera in kilometers
-  float t = iDepth / (aerialLutRes - 1.);    // Normalize the distance
-  t = clamp(t, 0.0, 1.0);             // Clamp to the range [0, 1]
-
-  // Calculate screen space UV coordinates from the fragment's position
-  vec2 uv = gl_FragCoord.xy / iResolution.xy;
-
-  vec3 uvw;
-  uvw.xy = uv;
-  uvw.z = t;
-
-  // aerial perspective LUT
-  vec4 col = texture(iAerialPerspective, uvw);
-
-  // in-scattering from the current position to the camera
-  vec3 in_scatter = col.rgb;
-
-  // accumulated transmittance from the current position to the camera
-  vec3 transmittance = vec3(col.a);
-
-  vec3 sky_irradiance = getValFromIrradianceLUT(iIrradiance, iResolution.xy, pos, iSunDirection);
+  vec3 transmittance, in_scatter, sky_irradiance;
 
   #ifndef USE_LUT
   float atmosphereRadiusMM = getAtmosphereSize();
@@ -85,23 +55,45 @@ void main() {
     mindist = 0.0;
   }
 
-  if (length(ro) < groundRadiusMM) {
+  if(length(ro) < groundRadiusMM) {
     // start on ground and end in atmosphere top
     mindist = terra_intercept;
   }
 
   vec3 rayStart = ro + mindist * rd;
   float tMax = maxdist - mindist;
-  raymarchScattering(rayStart, rd, iSunDirection, tMax, 8., transmittance, sky_irradiance, in_scatter);
+  vec3 sky_radiance;
+  raymarchScattering(rayStart, rd, iSunDirection, tMax, 8., transmittance, sky_radiance, in_scatter);
+  #else
+  float iDepth = (dist / aerialLutStep) - 1.;
+
+  // calculate the distance to the camera in kilometers
+  float t = iDepth / (aerialLutRes - 1.);    // Normalize the distance
+  t = clamp(t, 0.0, 1.0);             // Clamp to the range [0, 1]
+
+  // Calculate screen space UV coordinates from the fragment's position
+  vec2 uv = gl_FragCoord.xy / iResolution.xy;
+
+  vec3 uvw;
+  uvw.xy = uv;
+  uvw.z = t;
+
+  // aerial perspective LUT
+  vec4 aerialSample = texture(iAerialPerspective, uvw);
+  // in-scattering from the current position to the camera
+  in_scatter = aerialSample.rgb;
+  // accumulated transmittance from the current position to the camera
+  transmittance = vec3(aerialSample.a);
   #endif
 
   // calculate the indirect irradiance 
   // which is the sky light that is scattered into the current position taking into account
   // ambient occlusion and the sky luminance
-  vec3 ambient_occlusion = vec3(1.0);
-  vec3 indirect_irradiance = sky_irradiance * ambient_occlusion;
-
+  vec3 irradiance = getValFromIrradianceLUT(iIrradiance, iResolution.xy, pos, iSunDirection);
   float r = length(pos);
+  sky_irradiance = irradiance * (1.0 + dot(normal, pos) / r) * 0.5;
+  vec3 ambient_occlusion = vec3(1.0); // TODO pbr maps
+  vec3 indirect_irradiance = sky_irradiance * ambient_occlusion;
 
   // get the transmittance to the sun
   vec3 sun_transmittance = getValFromTLUT(iTransmittance, iResolution.xy, pos, iSunDirection);
@@ -114,17 +106,13 @@ void main() {
   // TODO: PBR maps here
   vec3 albedo = texture(iAlbedoTexture, vUv).rgb;
 
-  vec3 radiance = albedo * (1.0 / PI) * (indirect_irradiance + direct_irradiance);
-
+  vec3 radiance = albedo * (1.0 / pi) * (indirect_irradiance + direct_irradiance);
   radiance *= transmittance;
   radiance += in_scatter;
 
   vec4 fragColor;
-  fragColor.rgb = radiance * iExposure;
+  fragColor.rgb = radiance;
   fragColor.a = 1.0;
-
-  // output normal to fragColor
-  // fragColor.rgb = normal * .5 + .5;
 
   gl_FragColor = fragColor;
 

@@ -4,23 +4,40 @@ import { Sky } from './sky'
 import { Perf } from 'r3f-perf'
 import { Terrain } from './terrain/shaded'
 import { useRef } from 'react'
-import { Data3DTexture, LineBasicMaterial, PCFShadowMap, Texture, Vector3, WebGLShadowMap } from 'three'
+import {
+  Data3DTexture,
+  LineBasicMaterial,
+  PCFShadowMap,
+  Texture,
+  Vector3,
+  WebGLShadowMap,
+} from 'three'
 import { TerrainDisplaced } from './terrain/displaced'
 import { TerrainDebug } from './terrain/debug'
-import { useAtom } from 'jotai'
-import { debugAtom } from './controls'
+// @ts-ignore
+import WebGPURenderer from 'three/addons/renderers/webgpu/WebGPURenderer.js'
+import { useControls } from 'leva'
+import Controls from './controls'
 
 function Debug() {
-  const [debug] = useAtom(debugAtom)
+  const { debug } = useControls({ debug: false })
   if (!debug) return null
   return (
     <>
       <Perf position="top-left" />
       <gridHelper
-        position={[0, 3, 0]}
+        position={[0, 0, 0]}
         args={[1000, 100, 0xffffff, 0xffffff]}
+        material={
+          new LineBasicMaterial({
+            color: 0xffffff,
+            opacity: 0.2,
+            transparent: true,
+            depthTest: false,
+          })
+        }
       />
-      <axesHelper args={[10]} position={[0, 3.01, 0]}/>
+      <axesHelper args={[10]} position={[0, 3.01, 0]} />
     </>
   )
 }
@@ -37,11 +54,14 @@ export default function () {
   const multiScattering = useRef<Texture>()
   return (
     <>
-      <Canvas shadows={{
-        type: PCFShadowMap,
-        
-        }} camera={{ position: [2, 5, 15] }}>
+      <Canvas
+        shadows={{
+          type: PCFShadowMap,
+        }}
+        camera={{ position: [2, 5, 15], far: 10000 }}
+      >
         <Debug />
+        <Controls />
         {/* <fog attach="fog" /> */}
         <Sky
           aerialPerspective={aerialPerspective}
@@ -85,7 +105,7 @@ export default function () {
           <GrassMaterial />
         </mesh> */}
 
-        <OrbitControls makeDefault />
+        <OrbitControls makeDefault maxDistance={9000} minDistance={1} />
       </Canvas>
       {/* <Loader /> */}
     </>
