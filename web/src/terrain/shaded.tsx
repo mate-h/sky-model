@@ -8,9 +8,8 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import { SkyContext, sunDirection } from '../sky'
 import { MapTile } from './lib'
-import { useAtom } from 'jotai'
-import { useFrame } from '@react-three/fiber'
-import { TerrainMaterial, TerrainStandardMaterial } from './material'
+import { useFrame, useThree } from '@react-three/fiber'
+import { TerrainStandardMaterial } from './material'
 import { useControls } from 'leva'
 
 let centerCoord = [181, 343, 10]
@@ -34,19 +33,6 @@ function TerrainTile({
   res?: number
 }) {
   const mapTile = new MapTile(...coords)
-  // const mapTile = new MapTile(389, 578, 10)
-  // const terrainTexture = useRef<Texture>()
-  const [albedoTexture, setAlbedo] = useState<Texture | undefined>(undefined)
-  const [terrainTexture, setTerrain] = useState<Texture | undefined>(undefined)
-  useEffect(() => {
-    // load texture
-    loader.load(mapTile.getTexture('terrain'), (texture) => {
-      setTerrain(texture)
-    })
-    loader.load(mapTile.getTexture('satellite'), (texture) => {
-      setAlbedo(texture)
-    })
-  }, [coords])
 
   const position = new Vector3(
     (coords[0] - centerCoord[0]) * s,
@@ -54,44 +40,34 @@ function TerrainTile({
     0
   )
 
-  const {standardMaterial} = useControls({standardMaterial: false});
-
   // dynamic LOD
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
       <mesh position={position} receiveShadow castShadow>
         <planeGeometry args={[s, s, res, res]} />
 
-        {!standardMaterial && (
-          <TerrainMaterial
-            aerialPerspective={aerialPerspective}
-            transmittance={transmittance}
-            irradiance={irradiance}
-            sunDirection={sunDirection}
-            multiScattering={multiScattering}
-            terrainTexture={terrainTexture}
-            albedoTexture={albedoTexture}
-          />
-        )}
-
-        {standardMaterial && (
-          <TerrainStandardMaterial
-            aerialPerspective={aerialPerspective}
-            transmittance={transmittance}
-            irradiance={irradiance}
-            sunDirection={sunDirection}
-            multiScattering={multiScattering}
-            terrainTexture={terrainTexture}
-            albedoTexture={albedoTexture}
-          />
-        )}
+        <TerrainStandardMaterial
+          aerialPerspective={aerialPerspective}
+          transmittance={transmittance}
+          irradiance={irradiance}
+          sunDirection={sunDirection}
+          multiScattering={multiScattering}
+          mapTile={mapTile}
+        />
       </mesh>
     </group>
   )
 }
 
 export function Terrain(ctx: SkyContext) {
-  const {terrainSize: N} = useControls({terrainSize: 1})
+  const { terrainSize: N } = useControls({
+    terrainSize: {
+      value: 1,
+      min: 1,
+      step: 1,
+      max: 9,
+    },
+  })
   const O = Math.floor(N / 2)
   const nByNGrid = Array.from({ length: N * N }, (_, i) => {
     const x = i % N
@@ -118,12 +94,7 @@ export function Terrain(ctx: SkyContext) {
   return (
     <>
       <directionalLight ref={lightRef} castShadow intensity={1} />
-      {/* <hemisphereLight intensity={0.1} /> */}
 
-      {/* <mesh position={[0,5,0]} castShadow>
-        <sphereGeometry />
-        <meshStandardMaterial />
-      </mesh> */}
       {nByNGrid.map(([x, y, z]) => (
         <TerrainTile key={`${x}-${y}-${z}`} coords={[x, y, z]} {...ctx} />
       ))}

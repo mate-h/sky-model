@@ -27,7 +27,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   // calculate the sky luminance
   vec3 lum, transmittance;
   float atmosphereRadiusMM = getAtmosphereSize();
-  if(length(rayOrigin) < atmosphereRadiusMM * 1.0) {
+  if(true) { // length(rayOrigin) < atmosphereRadiusMM * 1.0
     lum = getValFromSkyLUT(iSkyview, iResolution.xy, rayDir, sunDir);
     transmittance = getValFromTLUT(iTransmittance, iResolution.xy, rayOrigin, sunDir);
   } else {
@@ -47,14 +47,14 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     if(length(rayOrigin) < atmosphereRadiusMM) {
       mindist = 0.0;
     }
-    
+
     if(terra_intercept > 0.0) {
       maxdist = terra_intercept;
 
       // fragColor = vec4(0.0, 0.0, 0.0, 1.0);
       // return;
     }
-    if (length(rayOrigin) < groundRadiusMM) {
+    if(length(rayOrigin) < groundRadiusMM) {
       // start on ground and end in atmosphere top
       mindist = terra_intercept;
       maxdist = atmos_intercept.y;
@@ -86,5 +86,5 @@ void main() {
   mainImage(gl_FragColor, gl_FragCoord.xy);
 
   #include <tonemapping_fragment>
-  gl_FragColor = LinearTosRGB(gl_FragColor);
+  gl_FragColor = linearToOutputTexel(gl_FragColor);
 }

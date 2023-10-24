@@ -105,7 +105,7 @@ export default function () {
           <GrassMaterial />
         </mesh> */}
 
-        <OrbitControls makeDefault maxDistance={9000} minDistance={1} />
+        <OrbitControls makeDefault maxDistance={100} minDistance={1} maxPolarAngle={Math.PI/2} />
       </Canvas>
       {/* <Loader /> */}
     </>

@@ -6,12 +6,21 @@
 in vec2 vUv;
 in vec3 vWorldPosition;
 
+#define USE_LUT
+
 void applySkyLighting(in vec3 albedo, in vec3 viewNormal, inout vec3 outgoingLight) {
   vec3 ro, rd;
   cameraRay(ro, rd);
+  vec3 normal = texture2D(normalMap, vNormalMapUv).xyz;
+  normal = normalize(2.0 * normal - 1.0);
+  normal = vec3(normal.x, normal.z, -normal.y);
   vec3 pos = transformPosition(vWorldPosition);
+  // Calculate the distance from the camera to the current fragment position
   float dist = length(pos - ro);
-  vec2 uv = gl_FragCoord.xy / iResolution.xy;
+
+  vec3 transmittance, in_scatter;
+
+  #ifndef USE_LUT
   float atmosphereRadiusMM = getAtmosphereSize();
   vec2 atmos_intercept = rayIntersectSphere2D(ro, rd, atmosphereRadiusMM);
   float terra_intercept = rayIntersectSphere(ro, rd, groundRadiusMM);
@@ -22,19 +31,43 @@ void applySkyLighting(in vec3 albedo, in vec3 viewNormal, inout vec3 outgoingLig
   if(length(ro) < atmosphereRadiusMM) {
     mindist = 0.0;
   }
+
   if(length(ro) < groundRadiusMM) {
+    // start on ground and end in atmosphere top
     mindist = terra_intercept;
   }
+
   vec3 rayStart = ro + mindist * rd;
   float tMax = maxdist - mindist;
-  vec3 transmittance, radiance, in_scatter;
-  raymarchScattering(rayStart, rd, iSunDirection, tMax, 8., transmittance, radiance, in_scatter);
+  vec3 sky_radiance;
+  raymarchScattering(rayStart, rd, iSunDirection, tMax, 8., transmittance, sky_radiance, in_scatter);
+  #else
+  float iDepth = (dist / aerialLutStep) - 1.;
 
-  vec3 normal = texture2D(normalMap, vNormalMapUv).xyz;
-  normal = normalize(2.0 * normal - 1.0); // Usually normal maps are stored in [0,1], so this maps it to [-1,1]
-  normal = vec3(normal.x, normal.z, -normal.y);
+  // calculate the distance to the camera in kilometers
+  float t = iDepth / (aerialLutRes - 1.);    // Normalize the distance
+  t = clamp(t, 0.0, 1.0);             // Clamp to the range [0, 1]
 
-  float shadow = getShadow( directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, directionalLightShadows[0].shadowBias, directionalLightShadows[0].shadowRadius, vDirectionalShadowCoord[0] );
+  // Calculate screen space UV coordinates from the fragment's position
+  vec2 uv = gl_FragCoord.xy / iResolution.xy;
+
+  vec3 uvw;
+  uvw.xy = uv;
+  uvw.z = t;
+
+  // aerial perspective LUT
+  vec4 aerialSample = texture(iAerialPerspective, uvw);
+  // in-scattering from the current position to the camera
+  in_scatter = aerialSample.rgb;
+  // accumulated transmittance from the current position to the camera
+  transmittance = vec3(aerialSample.a);
+  #endif
+
+  float shadow = getShadow(directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, directionalLightShadows[0].shadowBias, directionalLightShadows[0].shadowRadius, vDirectionalShadowCoord[0]);
+
+  // TODO: fixed step raymarch towards the geometry
+  // to determine the in-scattering from the current position to the camera
+  // for atmospheric light shafts / sun rays
 
   vec3 sun_transmittance = getValFromTLUT(iTransmittance, iResolution.xy, pos, iSunDirection);
   vec3 direct_irradiance = sun_transmittance * solar_irradiance * max(dot(normal, iSunDirection), 0.0) * shadow;
@@ -49,7 +82,4 @@ void applySkyLighting(in vec3 albedo, in vec3 viewNormal, inout vec3 outgoingLig
   // aerial perspective
   outgoingLight *= transmittance;
   outgoingLight += in_scatter;
-
-  // outgoingLight = vWorldPosition / 13.;
-  // outgoingLight = normal * 0.5 + 0.5;
 }

@@ -31,7 +31,7 @@ vec3 getNormal(vec3 pos, vec2 uv) {
   return n;
 }
 
-// #define USE_LUT
+#define USE_LUT
 
 void main() {
   vec3 ro, rd;
@@ -41,7 +41,7 @@ void main() {
   // Calculate the distance from the camera to the current fragment position
   float dist = length(pos - ro);
 
-  vec3 transmittance, in_scatter, sky_irradiance;
+  vec3 transmittance, in_scatter;
 
   #ifndef USE_LUT
   float atmosphereRadiusMM = getAtmosphereSize();
@@ -91,7 +91,7 @@ void main() {
   // ambient occlusion and the sky luminance
   vec3 irradiance = getValFromIrradianceLUT(iIrradiance, iResolution.xy, pos, iSunDirection);
   float r = length(pos);
-  sky_irradiance = irradiance * (1.0 + dot(normal, pos) / r) * 0.5;
+  vec3 sky_irradiance = irradiance * (1.0 + dot(normal, pos) / r) * 0.5;
   vec3 ambient_occlusion = vec3(1.0); // TODO pbr maps
   vec3 indirect_irradiance = sky_irradiance * ambient_occlusion;
 
@@ -120,5 +120,5 @@ void main() {
   gl_FragColor = fragColor;
 
   #include <tonemapping_fragment>
-  gl_FragColor = LinearTosRGB(gl_FragColor);
+  gl_FragColor = linearToOutputTexel(gl_FragColor);
 }

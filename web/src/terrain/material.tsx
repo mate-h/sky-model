@@ -1,6 +1,12 @@
-import { MeshStandardMaterial, Shader, ShaderMaterial, Texture } from 'three'
+import {
+  MeshStandardMaterial,
+  Shader,
+  ShaderMaterial,
+  Texture,
+  TextureLoader,
+} from 'three'
 import { SkyContext } from '../sky'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import mainFrag from './main.frag'
 import mainVert from './main.vert'
 import pbrFrag from './pbr.frag'
@@ -12,6 +18,8 @@ import { ShaderPass } from '../shader/pass'
 import heightFrag from './height.frag'
 import normalFrag from './normal.frag'
 import { glsl } from '../glsl'
+import { MapTile } from './lib'
+import { useTexture } from '@react-three/drei'
 
 export function TerrainMaterial({
   aerialPerspective,
@@ -71,19 +79,37 @@ export function TerrainMaterial({
   return <shaderMaterial ref={matRef} vertexShader={vs} fragmentShader={fs} />
 }
 
-export function TerrainStandardMaterial({
-  aerialPerspective,
-  transmittance,
-  irradiance,
-  sunDirection,
-  multiScattering,
-  terrainTexture,
-  albedoTexture,
-}: SkyContext & {
-  terrainTexture: Texture | undefined
-  albedoTexture: Texture | undefined
-}) {
+type Props = SkyContext & {
+  // terrainTexture: Texture | undefined
+  // albedoTexture: Texture | undefined
+
+  mapTile: MapTile
+}
+
+const loader = new TextureLoader()
+export const TerrainStandardMaterial = (props: Props) => {
+  const {
+    aerialPerspective,
+    transmittance,
+    irradiance,
+    sunDirection,
+    multiScattering,
+    mapTile,
+  } = props
+
   const matRef = useRef<MeshStandardMaterial>(null)
+  const [albedoTexture, setAlbedo] = useState<Texture | undefined>(undefined)
+  const [terrainTexture, setTerrain] = useState<Texture | undefined>(undefined)
+  useEffect(() => {
+    // load texture
+    loader.load(mapTile.getTexture('terrain'), (texture) => {
+      setTerrain(texture)
+    })
+    loader.load(mapTile.getTexture('satellite'), (texture) => {
+      setAlbedo(texture)
+    })
+  }, [mapTile])
+
   const heightMap = useRenderTarget()
   const normalMap = useRenderTarget()
   const shaderRef = useRef<Shader>()
@@ -93,7 +119,9 @@ export function TerrainStandardMaterial({
     return {
       iResolution: { value: [w, h, 0] },
       iCameraWorld: { value: state.camera.matrixWorld },
-      iCameraProjectionInverse: { value: state.camera.projectionMatrixInverse },
+      iCameraProjectionInverse: {
+        value: state.camera.projectionMatrixInverse,
+      },
       iAerialPerspective: {
         value: aerialPerspective?.current,
       },
@@ -120,8 +148,9 @@ export function TerrainStandardMaterial({
 
   const state = useThree()
   function onBeforeCompile(shader: Shader) {
-    
     shaderRef.current = shader
+
+    // console.log(shader.fragmentShader);
 
     // TODO: modify vertex shader to include map transform
 
@@ -134,14 +163,27 @@ export function TerrainStandardMaterial({
         // prettier-ignore
         ``
     )
-    shader.fragmentShader = shader.fragmentShader.replace(glsl`void main() {`, glsl`${pbrFrag}\nvoid main() {`)
     shader.fragmentShader = shader.fragmentShader.replace(
-      glsl`#include <output_fragment>`,
-      glsl`applySkyLighting(diffuseColor.rgb, normal, outgoingLight);\n  #include <output_fragment>` +
+      glsl`void main() {`,
+      glsl`${pbrFrag}\nvoid main() {`
+    )
+    shader.fragmentShader = shader.fragmentShader.replace(
+      glsl`#include <opaque_fragment>`,
+      glsl`applySkyLighting(diffuseColor.rgb, normal, outgoingLight);\n  #include <opaque_fragment>` +
         // prettier-ignore
         ``
     )
   }
+
+  useEffect(() => {
+    if (shaderRef.current) {
+      const u = getUniforms(state)
+      shaderRef.current.uniforms = u
+      requestAnimationFrame(() => {
+        matRef.current!.needsUpdate = true
+      })
+    }
+  }, [terrainTexture, albedoTexture])
 
   useFrame((state) => {
     const u = getUniforms(state)

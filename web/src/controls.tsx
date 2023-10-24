@@ -10,7 +10,6 @@ export const globalUniforms = {
 export const controlsAtom = atom<Controls>({
   debug: false,
   terrainSize: 1,
-  standardMaterial: false,
   exposure: 3,
   atmosphereSize: 100,
   toneMapping: 'ACESFilmicToneMapping',
@@ -21,7 +20,6 @@ export type Controls = {
   debug: boolean
   terrainSize: number
   atmosphereSize: number
-  standardMaterial: boolean
   toneMapping: string
 }
 
@@ -32,16 +30,26 @@ export default function () {
       min: 0,
     },
     debug: false,
-    terrainSize: 1,
+    terrainSize: {
+      value: 1,
+      min: 1,
+      step: 1,
+      max: 9,
+    },
     atmosphereSize: 100,
-    standardMaterial: false,
     toneMapping: {
       value: 'ACESFilmicToneMapping',
-      options: ['NoToneMapping', 'LinearToneMapping', 'ReinhardToneMapping', 'CineonToneMapping', 'ACESFilmicToneMapping'],
+      options: [
+        'NoToneMapping',
+        'LinearToneMapping',
+        'ReinhardToneMapping',
+        'CineonToneMapping',
+        'ACESFilmicToneMapping',
+      ],
     },
   })
-  const { exposure, debug, terrainSize, atmosphereSize, standardMaterial, toneMapping } = controls
-  useFrame(({gl}) => {
+  const { exposure, atmosphereSize, toneMapping } = controls
+  useFrame(({ gl }) => {
     gl.toneMappingExposure = exposure
     // @ts-ignore
     gl.toneMapping = THREE[toneMapping]
