@@ -17,7 +17,8 @@ void main() {
   cameraRayUv(ro, rd, uv);
 
   // generate vector along the view ray at specified intervals
-  float t = (iDepth + 1.0) * aerialLutStep;
+  float w = iDepth / (aerialLutRes - 1.0);
+  float t = mix(0., (aerialLutRes - 1.0) * aerialLutStep, w);
 
   vec3 transmittance, radiance, inscattering;
   raymarchScattering(ro, rd, iSunDirection, t, float(numScatteringSteps), transmittance, radiance, inscattering);

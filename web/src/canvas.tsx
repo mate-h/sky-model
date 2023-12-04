@@ -18,6 +18,7 @@ import { TerrainDebug } from './terrain/debug'
 import WebGPURenderer from 'three/addons/renderers/webgpu/WebGPURenderer.js'
 import { useControls } from 'leva'
 import Controls from './controls'
+import { TerrainGlobe } from './terrain/globe'
 
 function Debug() {
   const { debug } = useControls({ debug: false })
@@ -79,6 +80,8 @@ export default function () {
           multiScattering={multiScattering}
         />
 
+        {/* <TerrainGlobe /> */}
+
         {/* <TerrainDebug
           context={{
             aerialPerspective,
@@ -105,7 +108,8 @@ export default function () {
           <GrassMaterial />
         </mesh> */}
 
-        <OrbitControls makeDefault maxDistance={100} minDistance={1} maxPolarAngle={Math.PI/2} />
+        {/* maxDistance={100} minDistance={1} maxPolarAngle={Math.PI/2} */}
+        <OrbitControls makeDefault  />
       </Canvas>
       {/* <Loader /> */}
     </>

@@ -57,7 +57,7 @@ export function TerrainGlobe() {
   return (
     <>
       <mesh visible={false}>
-        <sphereBufferGeometry />
+        <sphereGeometry />
         <meshBasicMaterial color="#333" transparent opacity={1 - 0.12} />
       </mesh>
       {tiles.map((tile) => (

@@ -27,7 +27,7 @@ function TerrainTile({
   sunDirection,
   multiScattering,
   coords,
-  res = 512,
+  res = 512, // 512
 }: SkyContext & {
   coords: [number, number, number]
   res?: number
@@ -43,7 +43,7 @@ function TerrainTile({
   // dynamic LOD
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
-      <mesh position={position} receiveShadow castShadow>
+      <mesh position={position}>
         <planeGeometry args={[s, s, res, res]} />
 
         <TerrainStandardMaterial

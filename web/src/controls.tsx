@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 export const globalUniforms = {
   iAtmosphereSize: { value: 100 },
+  iUseLut: { value: 0 },
 }
 
 export const controlsAtom = atom<Controls>({
@@ -13,6 +14,7 @@ export const controlsAtom = atom<Controls>({
   exposure: 3,
   atmosphereSize: 100,
   toneMapping: 'ACESFilmicToneMapping',
+  useLut: false,
 })
 
 export type Controls = {
@@ -21,6 +23,7 @@ export type Controls = {
   terrainSize: number
   atmosphereSize: number
   toneMapping: string
+  useLut: boolean
 }
 
 export default function () {
@@ -47,8 +50,9 @@ export default function () {
         'ACESFilmicToneMapping',
       ],
     },
+    useLut: true,
   })
-  const { exposure, atmosphereSize, toneMapping } = controls
+  const { exposure, atmosphereSize, toneMapping, useLut } = controls
   useFrame(({ gl }) => {
     gl.toneMappingExposure = exposure
     // @ts-ignore
@@ -56,7 +60,8 @@ export default function () {
   })
   useEffect(() => {
     globalUniforms.iAtmosphereSize.value = atmosphereSize
-  }, [atmosphereSize])
+    globalUniforms.iUseLut.value = controls.useLut ? 1 : 0
+  }, [atmosphereSize, useLut])
   const [, setControlsValue] = useAtom(controlsAtom)
   useEffect(() => {
     setControlsValue(controls)

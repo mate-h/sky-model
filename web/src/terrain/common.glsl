@@ -1,7 +1,7 @@
-float fdisplacement(vec2 uv) {
-  vec2 scaledUv = uv * vec2(5.);
-  return fbm(scaledUv, vec2(10.)) * 2.;
-}
+// float fdisplacement(vec2 uv) {
+//   vec2 scaledUv = uv * vec2(5.);
+//   return fbm(scaledUv, vec2(10.)) * 2.;
+// }
 
 float sindisplacement(vec2 uv) {
   vec2 scaledUv = uv * vec2(5.);
@@ -12,11 +12,12 @@ float sindisplacement(vec2 uv) {
 }
 
 float displacement(vec2 uv) {
-  return fdisplacement(uv);
+  return sindisplacement(uv);
 }
 
 const float earthRadius = 1.;
 
+const float pi = 3.1415926535897932384626433832795;
 float tile2lon(float x, float z) {
   return x / pow(2., z) * 2. * pi - pi;
 }

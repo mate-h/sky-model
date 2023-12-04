@@ -19,7 +19,6 @@ import heightFrag from './height.frag'
 import normalFrag from './normal.frag'
 import { glsl } from '../glsl'
 import { MapTile } from './lib'
-import { useTexture } from '@react-three/drei'
 
 export function TerrainMaterial({
   aerialPerspective,
@@ -216,6 +215,11 @@ export const TerrainStandardMaterial = (props: Props) => {
         normalMap={normalMap.texture}
         map={albedoTexture}
       />
+      {/* <meshNormalMaterial
+        
+        displacementMap={heightMap.texture}
+        normalMap={normalMap.texture}
+      /> */}
     </>
   )
 }
