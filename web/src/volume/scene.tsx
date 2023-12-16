@@ -8,6 +8,7 @@ import textureFrag from './texture.frag'
 import { UniformMaterial } from '../shader/uniforms'
 import { ShaderPass } from '../shader/pass'
 import { useRenderTarget } from '../shader/target'
+import { useControls } from 'leva'
 
 export default function VolumeScene() {
   const grayNoise = useTexture('gray-noise.png')
@@ -18,7 +19,7 @@ export default function VolumeScene() {
     camera.position.set(20.0, 40.0, -90.0)
   }, [camera])
 
-  const scalar = 1 / 4
+  const scalar = 1 / 8
   const getUniforms = (state: RootState) => {
     const w = state.size.width * state.viewport.dpr * scalar
     const h = state.size.height * state.viewport.dpr * scalar
@@ -34,19 +35,22 @@ export default function VolumeScene() {
   }
 
   const renderTarget = useRenderTarget({ scalar })
+  const { debug } = useControls({ debug: false })
 
   return (
     <>
       <OrbitControls target={[20, 18, -16]} />
 
-      <gridHelper args={[50, 50]} position={[20, 18, -16]}>
-        <meshBasicMaterial
-          attach="material"
-          color={0xffffff}
-          transparent
-          opacity={0.12}
-        />
-      </gridHelper>
+      {debug && (
+        <gridHelper args={[50, 50]} position={[20, 18, -16]}>
+          <meshBasicMaterial
+            attach="material"
+            color={0xffffff}
+            transparent
+            opacity={0.12}
+          />
+        </gridHelper>
+      )}
 
       <ShaderPass
         renderTarget={renderTarget}

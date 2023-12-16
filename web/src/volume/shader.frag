@@ -16,14 +16,16 @@
  *  - the two previous without volumetric shadows
  */
 #define D_DEMO_FREE
-//#define D_DEMO_SHOW_IMPROVEMENT_FLAT
-//#define D_DEMO_SHOW_IMPROVEMENT_NOISE
-//#define D_DEMO_SHOW_IMPROVEMENT_FLAT_NOVOLUMETRICSHADOW
-//#define D_DEMO_SHOW_IMPROVEMENT_NOISE_NOVOLUMETRICSHADOW
+// #define D_DEMO_SHOW_IMPROVEMENT_FLAT
+// #define D_DEMO_SHOW_IMPROVEMENT_NOISE
+// #define D_DEMO_SHOW_IMPROVEMENT_FLAT_NOVOLUMETRICSHADOW
+// #define D_DEMO_SHOW_IMPROVEMENT_NOISE_NOVOLUMETRICSHADOW
+
+#define D_LIGHT_2
 
 #ifdef D_DEMO_FREE
 	// Apply noise on top of the height fog?
-  #define D_FOG_NOISE 1.0
+  #define D_FOG_NOISE 3.0
 
 	// Height fog multiplier to show off improvement with new integration formula
   #define D_STRONG_FOG 0.0
@@ -73,8 +75,10 @@
 #define D_MAX_STEP_LENGTH_ENABLE 1
 
 // Light position and color
-#define LPOS vec3( 20.0+15.0*sin(time), 15.0+12.0*cos(time),-20.0)
-#define LCOL (600.0*vec3( 1.0, 0.9, 0.5))
+#define LPOS vec3(20.0 + 15.0 * sin(.5*time), 15.0 + 12.0 * cos(.5*time), -20.0 + 10.0 * sin(2.*time + 0.0))
+#define LCOL (60.0 * vec3(1.0, 0.9, 0.5))
+#define LPOS2 vec3(20.0 - 15.0 * sin(.5*time), 15.0 + 12.0 * cos(.5*time), -20.0 + 10.0 * sin(2.*time + 3.14))
+#define LCOL2 (60.0 * vec3(0.2, 0.5, 1.0))
 
 float displacementSimple(vec2 p) {
   float f;
@@ -104,21 +108,21 @@ vec3 getSceneColor(vec3 p, float material) {
 
 float getClosestDistance(vec3 p, out float material) {
   float d = 0.0;
-#if D_MAX_STEP_LENGTH_ENABLE
+  #if D_MAX_STEP_LENGTH_ENABLE
   float minD = 1.0; // restrict max step for better scattering evaluation
-#else
+  #else
   float minD = 10000000.0;
-#endif
+  #endif
   material = 0.0;
 
   float yNoise = 0.0;
   float xNoise = 0.0;
   float zNoise = 0.0;
-#if D_DETAILED_WALLS
+  #if D_DETAILED_WALLS
   yNoise = 1.0 * clamp(displacementSimple(p.xz * 0.005), 0.0, 1.0);
   xNoise = 2.0 * clamp(displacementSimple(p.zy * 0.005), 0.0, 1.0);
   zNoise = 0.5 * clamp(displacementSimple(p.xy * 0.01), 0.0, 1.0);
-#endif
+  #endif
 
   d = max(0.0, p.y - yNoise);
   if(d < minD) {
@@ -158,7 +162,15 @@ vec3 evaluateLight(in vec3 pos) {
   vec3 lightPos = LPOS;
   vec3 lightCol = LCOL;
   vec3 L = lightPos - pos;
-  return lightCol * 1.0 / dot(L, L);
+  vec3 r = lightCol * 1.0 / dot(L, L);
+  // 2
+  #ifdef D_LIGHT_2
+  lightPos = LPOS2;
+  lightCol = LCOL2;
+  L = lightPos - pos;
+  r += lightCol * 1.0 / dot(L, L);
+  #endif
+  return r;
 }
 
 vec3 evaluateLight(in vec3 pos, in vec3 normal) {
@@ -166,7 +178,16 @@ vec3 evaluateLight(in vec3 pos, in vec3 normal) {
   vec3 L = lightPos - pos;
   float distanceToL = length(L);
   vec3 Lnorm = L / distanceToL;
-  return max(0.0, dot(normal, Lnorm)) * evaluateLight(pos);
+  vec3 r = max(0.0, dot(normal, Lnorm)) * evaluateLight(pos);
+  // 2
+  #ifdef D_LIGHT_2
+  lightPos = LPOS2;
+  L = lightPos - pos;
+  distanceToL = length(L);
+  Lnorm = L / distanceToL;
+  r += max(0.0, dot(normal, Lnorm)) * evaluateLight(pos);
+  #endif
+  return r;
 }
 
 // To simplify: wavelength independent scattering and extinction
@@ -174,7 +195,7 @@ void getParticipatingMedia(out float sigmaS, out float sigmaE, in vec3 pos) {
   float heightFog = 7.0 + D_FOG_NOISE * 3.0 * clamp(displacementSimple(pos.xz * 0.005 + time * 0.01), 0.0, 1.0);
   heightFog = 0.3 * clamp((heightFog - pos.y) * 1.0, 0.0, 1.0);
 
-  const float fogFactor = 1.0 + D_STRONG_FOG * 5.0;
+  const float fogFactor = 1.0 + .5;
 
   const float sphereRadius = 5.0;
   float sphereFog = clamp((sphereRadius - length(pos - vec3(20.0, 19.0, -17.0))) / sphereRadius, 0.0, 1.0);
@@ -192,7 +213,7 @@ float phaseFunction() {
 }
 
 float volumetricShadow(in vec3 from, in vec3 to) {
-#if D_VOLUME_SHADOW_ENABLE
+  #if D_VOLUME_SHADOW_ENABLE
   const float numStep = 16.0; // quality control. Bump to avoid shadow alisaing
   float shadow = 1.0;
   float sigmaS = 0.0;
@@ -205,9 +226,9 @@ float volumetricShadow(in vec3 from, in vec3 to) {
     shadow *= exp(-sigmaE * dd);
   }
   return shadow;
-#else
+  #else
   return 1.0;
-#endif
+  #endif
 }
 
 void traceScene(bool improvedScattering, vec3 rO, vec3 rD, inout vec3 finalPos, inout vec3 normal, inout vec3 albedo, inout vec4 scatTrans) {
@@ -215,8 +236,6 @@ void traceScene(bool improvedScattering, vec3 rO, vec3 rD, inout vec3 finalPos, 
 
   float sigmaS = 0.0;
   float sigmaE = 0.0;
-
-  vec3 lightPos = LPOS;
 
   // Initialise volumetric scattering integration (to view)
   float transmittance = 1.0;
@@ -233,26 +252,34 @@ void traceScene(bool improvedScattering, vec3 rO, vec3 rD, inout vec3 finalPos, 
 
     #ifdef D_DEMO_FREE
     if(D_USE_IMPROVE_INTEGRATION > 0) // freedom/tweakable version
-    #else
+      #else
       if(improvedScattering)
-    #endif
+      #endif
       {
-      // See slide 28 at http://www.frostbite.com/2015/08/physically-based-unified-volumetric-rendering-in-frostbite/
+        vec3 lightPos = LPOS;
         vec3 S = evaluateLight(p) * sigmaS * phaseFunction() * volumetricShadow(p, lightPos);// incoming light
         vec3 Sint = (S - S * exp(-sigmaE * dd)) / sigmaE; // integrate along the current step segment
         scatteredLight += transmittance * Sint; // accumulate and also take into account the transmittance from previous steps
 
-      // Evaluate transmittance to view independentely
+        #ifdef D_LIGHT_2
+        lightPos = LPOS2;
+        S = evaluateLight(p) * sigmaS * phaseFunction() * volumetricShadow(p, lightPos);
+        Sint = (S - S * exp(-sigmaE * dd)) / sigmaE;
+        scatteredLight += transmittance * Sint;
+        #endif
+
+        // Evaluate and combine transmittance (if they affect each other, this needs more complex handling)
         transmittance *= exp(-sigmaE * dd);
       } else {
-      // Basic scatering/transmittance integration
-    #if D_UPDATE_TRANS_FIRST
+        vec3 lightPos = LPOS;
+        // Basic scatering/transmittance integration
+        #if D_UPDATE_TRANS_FIRST
         transmittance *= exp(-sigmaE * dd);
-    #endif
+        #endif
         scatteredLight += sigmaS * evaluateLight(p) * phaseFunction() * volumetricShadow(p, lightPos) * transmittance * dd;
-    #if !D_UPDATE_TRANS_FIRST
+        #if !D_UPDATE_TRANS_FIRST
         transmittance *= exp(-sigmaE * dd);
-    #endif
+        #endif
       }
 
     dd = getClosestDistance(p, material);
@@ -280,7 +307,11 @@ void mainImage(out vec4 fragColor, in Ray ray) {
   traceScene(true, rO, rD, finalPos, normal, albedo, scatTrans);
 
   //lighting
-  vec3 color = (albedo / 3.14) * evaluateLight(finalPos, normal) * volumetricShadow(finalPos, LPOS);
+  vec3 color = (albedo / 3.14) * evaluateLight(finalPos, normal);
+  color *= volumetricShadow(finalPos, LPOS);
+  #ifdef D_LIGHT_2
+  color *= volumetricShadow(finalPos, LPOS2);
+  #endif
 
   // Apply scattering/transmittance
   color = color * scatTrans.w + scatTrans.xyz;
