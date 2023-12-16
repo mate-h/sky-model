@@ -11,7 +11,7 @@ import mainFrag from './main.frag'
 import mainVert from './main.vert'
 import pbrFrag from './pbr.frag'
 import { useUniforms } from '../shader/uniforms'
-import { globalUniforms } from '../controls'
+import { useSkyUniforms } from '../sky/uniforms'
 import { useRenderTarget } from '../shader/target'
 import { RootState, useFrame, useThree } from '@react-three/fiber'
 import { ShaderPass } from '../shader/pass'
@@ -33,6 +33,7 @@ export function TerrainMaterial({
   albedoTexture: Texture | undefined
 }) {
   const matRef = useRef<ShaderMaterial>(null)
+  const skyUniforms = useSkyUniforms()
 
   const [fs, setFs] = useState(mainFrag)
   const [vs, setVs] = useState(mainVert)
@@ -71,7 +72,7 @@ export function TerrainMaterial({
       },
       iTerrainTexture: { value: terrainTexture },
       iAlbedoTexture: { value: albedoTexture },
-      ...globalUniforms,
+      ...skyUniforms,
     }
   })
 
@@ -112,6 +113,7 @@ export const TerrainStandardMaterial = (props: Props) => {
   const heightMap = useRenderTarget()
   const normalMap = useRenderTarget()
   const shaderRef = useRef<Shader>()
+  const skyUniforms = useSkyUniforms()
   const getUniforms = (state: RootState) => {
     const w = state.size.width * state.viewport.dpr
     const h = state.size.height * state.viewport.dpr
@@ -141,7 +143,7 @@ export const TerrainStandardMaterial = (props: Props) => {
       },
       iTerrainTexture: { value: terrainTexture },
       iAlbedoTexture: { value: albedoTexture },
-      ...globalUniforms,
+      ...skyUniforms,
     }
   }
 

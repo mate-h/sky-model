@@ -24,8 +24,8 @@ import vertexPass from '../shader/pass.vert'
 import { ScreenQuad } from '@react-three/drei'
 import { SunHelper } from './helper'
 import { UniformMaterial } from '../shader/uniforms'
-import { globalUniforms } from '../controls'
 import { use3DRenderTarget, useRenderTarget } from '../shader/target'
+import { useSkyUniforms } from './uniforms'
 
 export const sunDirection = new Vector3(0, .2, -1).normalize();
 
@@ -53,6 +53,7 @@ export function Sky({
     height: 32,
     depth: 32,
   })
+  const skyUniforms = useSkyUniforms();
 
   const getUniforms = (state: RootState) => {
     const w = state.size.width * state.viewport.dpr
@@ -86,7 +87,7 @@ export function Sky({
       iAerialPerspective: { value: aerialPerspectiveTexture?.texture },
       iTime: { value: t + 3 },
       iSunDirection: { value: sunDirection },
-      ...globalUniforms,
+      ...skyUniforms,
     }
   }
 

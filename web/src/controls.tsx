@@ -1,21 +1,11 @@
 import { useControls } from 'leva'
 import { useEffect } from 'react'
-import { atom, useAtom } from 'jotai'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+// scene uniforms
 export const globalUniforms = {
-  iAtmosphereSize: { value: 100 },
-  iUseLut: { value: 0 },
+  iValue: { value: 0 },
 }
-
-export const controlsAtom = atom<Controls>({
-  debug: false,
-  terrainSize: 1,
-  exposure: 3,
-  atmosphereSize: 100,
-  toneMapping: 'ACESFilmicToneMapping',
-  useLut: false,
-})
 
 export type Controls = {
   exposure: number
@@ -32,14 +22,11 @@ export default function () {
       value: 3,
       min: 0,
     },
-    debug: false,
-    terrainSize: {
-      value: 1,
-      min: 1,
-      step: 1,
-      max: 9,
+    value: {
+      value: 0,
+      min: 0,
+      max: 1,
     },
-    atmosphereSize: 100,
     toneMapping: {
       value: 'ACESFilmicToneMapping',
       options: [
@@ -50,21 +37,15 @@ export default function () {
         'ACESFilmicToneMapping',
       ],
     },
-    useLut: true,
   })
-  const { exposure, atmosphereSize, toneMapping, useLut } = controls
+  const { exposure, value, toneMapping } = controls
   useFrame(({ gl }) => {
     gl.toneMappingExposure = exposure
     // @ts-ignore
     gl.toneMapping = THREE[toneMapping]
   })
   useEffect(() => {
-    globalUniforms.iAtmosphereSize.value = atmosphereSize
-    globalUniforms.iUseLut.value = controls.useLut ? 1 : 0
-  }, [atmosphereSize, useLut])
-  const [, setControlsValue] = useAtom(controlsAtom)
-  useEffect(() => {
-    setControlsValue(controls)
-  }, [controls])
+    globalUniforms.iValue.value = value
+  }, [value])
   return <></>
 }
