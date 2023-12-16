@@ -19,6 +19,7 @@ import WebGPURenderer from 'three/addons/renderers/webgpu/WebGPURenderer.js'
 import { useControls } from 'leva'
 import Controls from './controls'
 import { TerrainGlobe } from './terrain/globe'
+import VolumeScene from './volume/scene'
 
 function Debug() {
   const { debug } = useControls({ debug: false })
@@ -63,7 +64,6 @@ export default function () {
       >
         <Debug />
         <Controls />
-        {/* <fog attach="fog" /> */}
         <Sky
           aerialPerspective={aerialPerspective}
           irradiance={irradiance}
@@ -79,6 +79,8 @@ export default function () {
           sunDirection={sunDirection}
           multiScattering={multiScattering}
         />
+
+        {/* <VolumeScene /> */}
 
         {/* <TerrainGlobe /> */}
 

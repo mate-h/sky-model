@@ -9,14 +9,14 @@ import {
   WebGLRenderTarget,
 } from 'three'
 
-export function useRenderTarget() {
+export function useRenderTarget({ scalar = 1 }: { scalar?: number } = {}) {
   const opts = {
     type: HalfFloatType,
   }
   const { size, viewport } = useThree()
   return useMemo(() => {
-    const w = size.width * viewport.dpr
-    const h = size.height * viewport.dpr
+    const w = size.width * viewport.dpr * scalar
+    const h = size.height * viewport.dpr * scalar
     return new WebGLRenderTarget(w, h, opts)
   }, [size, viewport])
 }
