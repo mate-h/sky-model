@@ -21,7 +21,7 @@
 // #define D_DEMO_SHOW_IMPROVEMENT_FLAT_NOVOLUMETRICSHADOW
 // #define D_DEMO_SHOW_IMPROVEMENT_NOISE_NOVOLUMETRICSHADOW
 
-#define D_LIGHT_2
+// #define D_LIGHT_2
 
 #ifdef D_DEMO_FREE
 	// Apply noise on top of the height fog?
@@ -79,6 +79,8 @@
 #define LCOL (60.0 * vec3(1.0, 0.9, 0.5))
 #define LPOS2 vec3(20.0 - 15.0 * sin(.5*time), 15.0 + 12.0 * cos(.5*time), -20.0 + 10.0 * sin(2.*time + 3.14))
 #define LCOL2 (60.0 * vec3(0.2, 0.5, 1.0))
+
+uniform vec3 translate;
 
 float displacementSimple(vec2 p) {
   float f;
@@ -155,11 +157,10 @@ vec3 calcNormal(in vec3 pos) {
   float material = 0.0;
   vec3 eps = vec3(0.3, 0.0, 0.0);
   return normalize(vec3(getClosestDistance(pos + eps.xyy, material) - getClosestDistance(pos - eps.xyy, material), getClosestDistance(pos + eps.yxy, material) - getClosestDistance(pos - eps.yxy, material), getClosestDistance(pos + eps.yyx, material) - getClosestDistance(pos - eps.yyx, material)));
-
 }
 
 vec3 evaluateLight(in vec3 pos) {
-  vec3 lightPos = LPOS;
+  vec3 lightPos = translate;
   vec3 lightCol = LCOL;
   vec3 L = lightPos - pos;
   vec3 r = lightCol * 1.0 / dot(L, L);
@@ -174,7 +175,7 @@ vec3 evaluateLight(in vec3 pos) {
 }
 
 vec3 evaluateLight(in vec3 pos, in vec3 normal) {
-  vec3 lightPos = LPOS;
+  vec3 lightPos = translate;
   vec3 L = lightPos - pos;
   float distanceToL = length(L);
   vec3 Lnorm = L / distanceToL;
@@ -256,7 +257,7 @@ void traceScene(bool improvedScattering, vec3 rO, vec3 rD, inout vec3 finalPos, 
       if(improvedScattering)
       #endif
       {
-        vec3 lightPos = LPOS;
+        vec3 lightPos = translate;
         vec3 S = evaluateLight(p) * sigmaS * phaseFunction() * volumetricShadow(p, lightPos);// incoming light
         vec3 Sint = (S - S * exp(-sigmaE * dd)) / sigmaE; // integrate along the current step segment
         scatteredLight += transmittance * Sint; // accumulate and also take into account the transmittance from previous steps
@@ -271,7 +272,7 @@ void traceScene(bool improvedScattering, vec3 rO, vec3 rD, inout vec3 finalPos, 
         // Evaluate and combine transmittance (if they affect each other, this needs more complex handling)
         transmittance *= exp(-sigmaE * dd);
       } else {
-        vec3 lightPos = LPOS;
+        vec3 lightPos = translate;
         // Basic scatering/transmittance integration
         #if D_UPDATE_TRANS_FIRST
         transmittance *= exp(-sigmaE * dd);
@@ -283,8 +284,8 @@ void traceScene(bool improvedScattering, vec3 rO, vec3 rD, inout vec3 finalPos, 
       }
 
     dd = getClosestDistance(p, material);
-    if(dd < 0.2)
-      break; // give back a lot of performance without too much visual loss
+    // if(dd < 0.2)
+    //   break; // give back a lot of performance without too much visual loss
     d += dd;
   }
 

@@ -6,8 +6,6 @@
 in vec2 vUv;
 in vec3 vWorldPosition;
 
-uniform float iUseLut;
-
 void applySkyLighting(in vec3 albedo, in vec3 viewNormal, inout vec3 outgoingLight) {
   vec3 ro, rd;
   cameraRay(ro, rd);

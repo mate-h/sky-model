@@ -2,11 +2,18 @@ const float pi = 3.14159265358;
 // const float RAD = 180.0 / pi;
 
 // Units are in megameters.
-const float groundRadiusMM = 6.360;
+// 1 megameter = 1000 kilometers
+#define USE_MARS
+
+#ifdef USE_MARS
+  const float groundRadiusMM = 3.3895; // Mars' radius in megameters
+#else
+  const float groundRadiusMM = 6.360; // Earth's radius in megameters
+#endif
 
 float getAtmosphereSize() {
   float atmosphereSizeMM = iAtmosphereSize * 0.001;
-  float atmosphereRadiusMM = 6.360 + atmosphereSizeMM;
+  float atmosphereRadiusMM = groundRadiusMM + atmosphereSizeMM;
   return atmosphereRadiusMM;
 }
 
@@ -33,8 +40,6 @@ const vec2 msLUTRes = vec2(32.0, 32.0);
 const vec2 skyLUTRes = vec2(200.0, 200.0);
 const vec2 irradianceLUTRes = vec2(128.0, 16.0);
 
-const vec3 groundAlbedo = vec3(0.3);
-
 // These are per megameter.
 const vec3 rayleighScatteringBase = vec3(5.802, 13.558, 33.1);
 const float rayleighAbsorptionBase = 0.0;
@@ -43,7 +48,21 @@ const float mieScatteringBase = 3.996;
 const float mieAbsorptionBase = 4.4;
 
 const vec3 ozoneAbsorptionBase = vec3(0.650, 1.881, .085);
-const vec3 solar_irradiance = vec3(1.0, 1.0, 1.0);
+
+#ifdef USE_MARS
+  const vec3 groundAlbedo = vec3(0.406683, 0.203038, 0.075251);
+  const vec3 solar_irradiance = vec3(0.392, 0.559, 0.621); 
+  // const vec3 solar_irradiance = vec3(1.0, 1.0, 1.0);
+#else
+  const vec3 groundAlbedo = vec3(0.3);
+  const vec3 solar_irradiance = vec3(1.0, 1.0, 1.0);
+#endif
+
+// These are per megameter (example values, adjust based on actual data)
+const vec3 CO2ScatteringBase = vec3(0.0897172, 0.0897172, 0.0897172); // Adjust for CO2
+const vec3 dustScatteringBase = vec3(10.155, 10.155, 10.155); // Adjust for Martian dust
+const vec3 DustAbsorptionBase = dustScatteringBase * vec3(1.0 - 0.94, 1.0 - 0.78, 1.0 - 0.63);
+const vec3 CO2AbsorptionBase = vec3(0.0, 0.0, 0.0); // Adjust for Martian dust
 
 float getMiePhase(float cosTheta) {
   const float g = 0.8;
@@ -60,6 +79,38 @@ float getRayleighPhase(float cosTheta) {
   return k * (1.0 + cosTheta * cosTheta);
 }
 
+float getMarsDustPhase(float cosTheta) {
+  const float g = 0.64; // Example value, adjust based on actual data
+  const float scale = 3.0 / (8.0 * pi);
+  float num = (1.0 - g * g) * (1.0 + cosTheta * cosTheta);
+  float denom = (2.0 + g * g) * pow((1.0 + g * g - 2.0 * g * cosTheta), 1.5);
+  return scale * num / denom;
+}
+
+float getCO2Density(float altitudeKM, float atmosphereSizeFactor) {
+  float scaleHeightCO2 = 10. * iValue * atmosphereSizeFactor; // Adjusted scale height for CO2
+  // 1.0744578e24
+  return 1. * exp(-altitudeKM / scaleHeightCO2);
+}
+
+float getDustDensity(float altitudeKM, float atmosphereSizeFactor) {
+  float scaleHeightDust = 10.8 * atmosphereSizeFactor; // Adjusted scale height for dust
+  // 4.559e6
+  return 1. * exp(-altitudeKM / scaleHeightDust);
+}
+
+float getRayleighDensity(float altitudeKM, float atmosphereSizeFactor) {
+  float rayleighScaleHeight = 8.0 * atmosphereSizeFactor; // in km
+  // 3.08458e25
+  return 1. * exp(-altitudeKM / rayleighScaleHeight);
+}
+
+float getMieDensity(float altitudeKM, float atmosphereSizeFactor) {
+  float mieScaleHeight = 1.2 * atmosphereSizeFactor; // in km
+  // 1.03333e8
+  return 1. * exp(-altitudeKM / mieScaleHeight);
+}
+
 void getScatteringValues(
   vec3 pos,
   out vec3 rayleighScattering, // sigma_rs
@@ -70,9 +121,10 @@ void getScatteringValues(
 
   float scalar = iAtmosphereSize * 0.01;
 
-  // Note: Paper gets these switched up.
   float rayleighDensity = exp(-altitudeKM / (8.0 * scalar));
   float mieDensity = exp(-altitudeKM / (1.2 * scalar));
+  // float rayleighDensity = getRayleighDensity(altitudeKM, scalar);
+  // float mieDensity = getMieDensity(altitudeKM, scalar);
 
   rayleighScattering = rayleighScatteringBase * rayleighDensity;
   float rayleighAbsorption = rayleighAbsorptionBase * rayleighDensity;
@@ -84,6 +136,31 @@ void getScatteringValues(
 
   extinction = rayleighScattering + rayleighAbsorption + mieScattering + mieAbsorption + ozoneAbsorption;
 }
+
+void getMarsScatteringValues(
+  vec3 pos,
+  out vec3 CO2Scattering, // Scattering due to CO2
+  out vec3 dustScattering, // Scattering due to Martian dust
+  out vec3 extinction      // Total extinction including scattering and absorption
+) {
+  float altitudeKM = (length(pos) - groundRadiusMM) * 1000.0;
+
+  float scalar = iAtmosphereSize * 0.01; 
+
+  // Calculate CO2 scattering and absorption
+  float CO2Density = getCO2Density(altitudeKM, scalar);
+  CO2Scattering = CO2ScatteringBase * CO2Density;
+  vec3 CO2Absorption = CO2AbsorptionBase * CO2Density; 
+
+  // Calculate dust scattering and absorption
+  float dustDensity = getDustDensity(altitudeKM, scalar);
+  dustScattering = dustScatteringBase * dustDensity;
+  vec3 dustAbsorption = DustAbsorptionBase * dustDensity;
+
+  // Calculate total extinction
+  extinction = CO2Scattering + CO2Absorption;// + dustScattering + dustAbsorption;
+}
+
 
 float safeacos(const float x) {
   return acos(clamp(x, -1.0, 1.0));

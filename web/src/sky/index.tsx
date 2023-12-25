@@ -26,6 +26,7 @@ import { SunHelper } from './helper'
 import { UniformMaterial } from '../shader/uniforms'
 import { use3DRenderTarget, useRenderTarget } from '../shader/target'
 import { useSkyUniforms } from './uniforms'
+import { globalUniforms } from '../controls'
 
 export const sunDirection = new Vector3(0, .2, -1).normalize();
 
@@ -88,6 +89,7 @@ export function Sky({
       iTime: { value: t + 3 },
       iSunDirection: { value: sunDirection },
       ...skyUniforms,
+      ...globalUniforms
     }
   }
 

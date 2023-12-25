@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 
 const skyUniforms = {
   iAtmosphereSize: { value: 100 },
+  // iAtmosphereSize: { value: 120 },
   iUseLut: { value: 0 },
 }
 

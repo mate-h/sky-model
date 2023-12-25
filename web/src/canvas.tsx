@@ -23,9 +23,9 @@ export default function () {
         
         <Debug />
 
-        {/* <SkyScene /> */}
+        <SkyScene />
 
-        <VolumeScene />
+        {/* <VolumeScene /> */}
 
         {/* <TerrainGlobe /> */}
 

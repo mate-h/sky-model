@@ -15,6 +15,8 @@ vec3 getSphericalDir(float theta, float phi) {
 }
 
 // Calculates Equation (5) and (7) from the paper.
+// lumTotal: total luminance
+// fms: fraction of multiple scattering
 void getMulScattValues(vec3 pos, vec3 sunDir, out vec3 lumTotal, out vec3 fms) {
   lumTotal = vec3(0.0);
   fms = vec3(0.0);
@@ -41,6 +43,9 @@ void getMulScattValues(vec3 pos, vec3 sunDir, out vec3 lumTotal, out vec3 fms) {
 
       float miePhaseValue = getMiePhase(cosTheta);
       float rayleighPhaseValue = getRayleighPhase(-cosTheta);
+      #ifdef USE_MARS
+        float dustPhaseValue = getMarsDustPhase(cosTheta);
+      #endif
 
       vec3 lum = vec3(0.0), lumFactor = vec3(0.0), transmittance = vec3(1.0);
       float t = 0.0;
@@ -54,6 +59,11 @@ void getMulScattValues(vec3 pos, vec3 sunDir, out vec3 lumTotal, out vec3 fms) {
         vec3 rayleighScattering, extinction;
         float mieScattering;
         getScatteringValues(newPos, rayleighScattering, mieScattering, extinction);
+        
+        #ifdef USE_MARS
+          vec3 CO2Scattering, dustScattering;
+          getMarsScatteringValues(newPos, CO2Scattering, dustScattering, extinction);
+        #endif
 
         vec3 sampleTransmittance = exp(-dt * extinction);
 
@@ -69,6 +79,12 @@ void getMulScattValues(vec3 pos, vec3 sunDir, out vec3 lumTotal, out vec3 fms) {
         vec3 rayleighInScattering = rayleighScattering * rayleighPhaseValue;
         float mieInScattering = mieScattering * miePhaseValue;
         vec3 inScattering = (rayleighInScattering + mieInScattering) * sunTransmittance;
+        
+        #ifdef USE_MARS
+          vec3 CO2InScattering = CO2Scattering * rayleighPhaseValue;
+          vec3 dustInScattering = dustScattering * dustPhaseValue;
+          inScattering = (CO2InScattering + dustInScattering) * sunTransmittance;
+        #endif
 
         // Integrated scattering within path segment.
         vec3 scatteringIntegral = (inScattering - inScattering * sampleTransmittance) / extinction;

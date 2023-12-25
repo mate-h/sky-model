@@ -25,6 +25,11 @@ vec3 computeTransmittance(vec3 pos, vec3 sunDir) {
     vec3 rayleighScattering, extinction;
     float mieScattering;
     getScatteringValues(newPos, rayleighScattering, mieScattering, extinction);
+    #ifdef USE_MARS
+      vec3 CO2Scattering, dustScattering;
+      getMarsScatteringValues(newPos, CO2Scattering, dustScattering, extinction);
+      // extinction = vec3(0.1);
+    #endif
 
     transmittance *= exp(-dt * extinction);
   }

@@ -12,3 +12,5 @@ uniform float iTime;
 uniform float iDepth;
 uniform vec3 iSunDirection;
 uniform float iAtmosphereSize;
+uniform float iUseLut;
+uniform float iValue;

@@ -13,6 +13,10 @@ void raymarchScattering(
   float miePhaseValue = getMiePhase(cosTheta);
   float rayleighPhaseValue = getRayleighPhase(-cosTheta);
 
+  #ifdef USE_MARS
+    float dustPhaseValue = getMarsDustPhase(cosTheta);
+  #endif
+
   radiance = vec3(0.0);
   transmittance = vec3(1.0);
   inscattering = vec3(0.0);
@@ -27,6 +31,10 @@ void raymarchScattering(
     vec3 rayleighScattering, extinction;
     float mieScattering;
     getScatteringValues(newPos, rayleighScattering, mieScattering, extinction);
+    #ifdef USE_MARS
+      vec3 CO2Scattering, dustScattering;
+      getMarsScatteringValues(newPos, CO2Scattering, dustScattering, extinction);
+    #endif
 
     vec3 sampleTransmittance = exp(-dt * extinction);
 
@@ -36,6 +44,15 @@ void raymarchScattering(
     vec3 rayleighInScattering = rayleighScattering * (rayleighPhaseValue * sunTransmittance + psiMS);
     vec3 mieInScattering = mieScattering * (miePhaseValue * sunTransmittance + psiMS);
     vec3 currentScattering = (rayleighInScattering + mieInScattering);
+
+    #ifdef USE_MARS
+      // Assuming CO2 scattering is similar to Rayleigh
+      vec3 CO2InScattering = CO2Scattering * (rayleighPhaseValue * sunTransmittance + psiMS);
+
+      // Dust scattering might need a different phase function
+      vec3 dustInScattering = dustScattering * (getMarsDustPhase(cosTheta) * sunTransmittance + psiMS);
+      currentScattering = (CO2InScattering + dustInScattering);
+    #endif
 
     vec3 scatteringIntegral;
     if(extinction != vec3(0.0)) {

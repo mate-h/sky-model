@@ -23,3 +23,7 @@ This package consists of three parts:
  * `ShowMySky` preview GUI that makes it possible to preview the rendering of the atmosphere model and examine its properties.
 
 Full documentation can be found [here](https://10110111.github.io/CalcMySky/).
+
+## Links
+
+https://www.shadertoy.com/view/3sffzj
