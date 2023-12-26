@@ -6,18 +6,51 @@ import {
   LinearFilter,
   RGBAFormat,
   WebGL3DRenderTarget,
+  WebGLMultipleRenderTargets,
   WebGLRenderTarget,
 } from 'three'
 
-export function useRenderTarget({ scalar = 1 }: { scalar?: number } = {}) {
+type RenderTargetProps = { scalar?: number; width?: number; height?: number }
+export function useRenderTarget({
+  scalar = 1,
+  width,
+  height,
+}: RenderTargetProps = {}) {
   const opts = {
     type: HalfFloatType,
   }
   const { size, viewport } = useThree()
   return useMemo(() => {
-    const w = size.width * viewport.dpr * scalar
-    const h = size.height * viewport.dpr * scalar
+    let w = size.width * viewport.dpr * scalar
+    let h = size.height * viewport.dpr * scalar
+    if (width) w = width
+    if (height) h = height
     return new WebGLRenderTarget(w, h, opts)
+  }, [size, viewport])
+}
+
+type MultiRenderTargetProps = {
+  scalar?: number
+  width?: number
+  height?: number
+  count?: number
+}
+export function useMultiRenderTarget({
+  scalar = 1,
+  count = 1,
+  width,
+  height,
+}: MultiRenderTargetProps = {}) {
+  const opts = {
+    type: HalfFloatType,
+  }
+  const { size, viewport } = useThree()
+  return useMemo(() => {
+    let w = size.width * viewport.dpr * scalar
+    let h = size.height * viewport.dpr * scalar
+    if (width) w = width
+    if (height) h = height
+    return new WebGLMultipleRenderTargets(w, h, count, opts)
   }, [size, viewport])
 }
 

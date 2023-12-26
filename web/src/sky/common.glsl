@@ -3,7 +3,7 @@ const float pi = 3.14159265358;
 
 // Units are in megameters.
 // 1 megameter = 1000 kilometers
-#define USE_MARS
+// #define USE_MARS
 
 #ifdef USE_MARS
   const float groundRadiusMM = 3.3895; // Mars' radius in megameters

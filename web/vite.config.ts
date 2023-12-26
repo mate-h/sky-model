@@ -19,9 +19,23 @@ const build = {
   rollupOptions: {
     external,
   },
-};
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), glsl()],
+  plugins: [
+    react(),
+    glsl(),
+    {
+      name: 'server-console-log',
+      configureServer(server) {
+        server.ws.on('log', (data, client) => {
+          console.log(data)
+        })
+        server.ws.on('log:error', (data, client) => {
+          console.error(data)
+        })
+      },
+    },
+  ],
 })

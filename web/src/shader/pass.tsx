@@ -1,6 +1,11 @@
 import { useFrame } from '@react-three/fiber'
-import { useRef } from 'react'
-import { Scene, ShaderMaterial, WebGLRenderTarget } from 'three'
+import { useRef, useState } from 'react'
+import {
+  Scene,
+  ShaderMaterial,
+  WebGLRenderTarget,
+  WebGLMultipleRenderTargets,
+} from 'three'
 import vertexPass from './pass.vert'
 import { ScreenQuad } from '@react-three/drei'
 import { UniformGetter, UniformMaterial } from './uniforms'
@@ -8,55 +13,74 @@ import { UniformGetter, UniformMaterial } from './uniforms'
 type ShaderPassProps = {
   uniforms: UniformGetter
   fragmentShader: string
-  renderTarget: WebGLRenderTarget
+  renderTarget: WebGLRenderTarget | WebGLMultipleRenderTargets | [WebGLRenderTarget, WebGLRenderTarget]
   depthName?: string
   once?: boolean
+  matRef?: React.RefObject<ShaderMaterial>
+  readTarget?: React.MutableRefObject<number>
 }
 
-/**
- * Shader pass component for performing post-processing effects
- * or compute shaders
- */
 export function ShaderPass({
   fragmentShader,
   renderTarget,
   uniforms,
   depthName = 'iDepth',
   once = false,
+  matRef,
+  readTarget = { current: 0 },
 }: ShaderPassProps) {
   const root = useRef<Scene>(null)
-  const is3D = renderTarget.depth > 0
-  const materialRef = useRef<ShaderMaterial>(null)
+  const materialRef = matRef || useRef<ShaderMaterial>(null)
   let frames = 0
+  // const [currentRenderTarget, setCurrentRenderTarget] = useState(0)
+
   useFrame(({ gl, camera }) => {
-    if (once) {
-      if (frames > 0) return
-    }
+    if (once && frames > 0) return
+
     const scene = root.current!
-    if (!scene || !renderTarget) return
+    if (!scene) return
+
     scene.visible = true
+
+    let target;
+    const isDoubleBuffered = Array.isArray(renderTarget);
+    const is3D = renderTarget instanceof WebGLMultipleRenderTargets || (isDoubleBuffered && renderTarget[0] instanceof WebGLMultipleRenderTargets);
+
+    if (isDoubleBuffered) {
+      // Use one of the two render targets for double buffering
+      target = renderTarget[readTarget.current];
+    } else {
+      // Use the single render target
+      target = renderTarget;
+    }
+
     if (is3D) {
-      const { depth } = renderTarget
+      const depth = isDoubleBuffered ? renderTarget[0].depth : renderTarget.depth;
       for (let i = 0; i < depth; i++) {
-        gl.setRenderTarget(renderTarget, i)
-        // set the iDepth uniform on the material
-        const u = materialRef.current!.uniforms;
-        if (u) {
+        gl.setRenderTarget(target, i)
+        if (materialRef.current) {
+          const u = materialRef.current.uniforms
           if (!u[depthName]) u[depthName] = { value: i }
           u[depthName].value = i
         }
         gl.render(scene, camera)
       }
     } else {
-      gl.setRenderTarget(renderTarget)
+      gl.setRenderTarget(target)
       gl.render(scene, camera)
     }
+
     scene.visible = false
     gl.setRenderTarget(null)
-    frames += 1
 
-    
+    if (isDoubleBuffered) {
+      // Swap render targets for the next frame
+      readTarget.current = 1 - readTarget.current
+    }
+
+    frames += 1
   })
+
   return (
     <scene ref={root}>
       <ScreenQuad>
