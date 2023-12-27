@@ -2,7 +2,9 @@
 const float defaultTMaxMax = 9000000.0;
 
 // Sample per pixel for ray marching
-const vec2 RayMarchMinMaxSPP = vec2(16, 32);
+const vec2 RayMarchMinMaxSPP = vec2(1, 16);
+// for thicker atmosphere
+// const vec2 RayMarchMinMaxSPP = vec2(64, 128);
 
 struct SingleScatteringResult {
   vec3 L;                        // Scattered light (luminance)
@@ -12,6 +14,12 @@ struct SingleScatteringResult {
   vec3 NewMultiScatStep0Out;
   vec3 NewMultiScatStep1Out;
 };
+
+// near: 0.01, far: 10000
+float linearizeDepth(float depth, float near, float far) {
+  float z = depth * 2.0 - 1.0; // Back to NDC 
+  return (2.0 * near * far) / (far + near - z * (far - near));
+}
 
 SingleScatteringResult IntegrateScatteredLuminance(
   in vec2 pixPos,
@@ -30,7 +38,7 @@ SingleScatteringResult IntegrateScatteredLuminance(
   const bool debugEnabled = false;
   SingleScatteringResult result = SingleScatteringResult(vec3(0.0), vec3(0.0), vec3(0.0), vec3(0.0), vec3(0.0), vec3(0.0));
 
-  vec3 ClipSpace = vec3((pixPos / vec2(resolution)) * vec2(2.0, -2.0) - vec2(1.0, -1.0), 1.0);
+  vec3 ClipSpace = vec3((pixPos / vec2(resolution)) * vec2(2.0, 2.0) - vec2(1.0, 1.0), 1.0);
 
   // Compute next intersection with atmosphere or ground 
   vec3 earthO = vec3(0.0, 0.0, 0.0);
@@ -50,20 +58,25 @@ SingleScatteringResult IntegrateScatteredLuminance(
     }
   }
 
+  // tMax = 100.;
+
   if(DepthBufferValue >= 0.0) {
     ClipSpace.z = DepthBufferValue;
     if(ClipSpace.z < 1.0) {
       vec4 DepthBufferWorldPos = iCameraProjectionInverse * vec4(ClipSpace, 1.0);
       DepthBufferWorldPos /= DepthBufferWorldPos.w;
 
-      float tDepth = length(DepthBufferWorldPos.xyz - (WorldPos + vec3(0.0, 0.0, -Atmosphere.BottomRadius))); // apply earth offset to go back to origin as top of earth mode. 
-      if(tDepth < tMax) {
-        tMax = tDepth;
-      }
+      float tDepth = length(DepthBufferWorldPos.xyz - (WorldPos + vec3(0.0, -Atmosphere.BottomRadius, 0.0))); // apply earth offset to go back to origin as top of earth mode. 
+      tMax = min(tMax, tDepth);
+      // result.L = vec3(tDepth);
+      // return result;
     }
+    // temporary
+    tMax = DepthBufferValue;
       // if (VariableSampleCount && ClipSpace.z == 1.0f)
       //     return result;
   }
+  // tMax = min(tMax, DepthBufferValue);
   tMax = min(tMax, tMaxMax);
 
   // Sample count 

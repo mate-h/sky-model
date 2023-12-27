@@ -174,6 +174,12 @@ export const TerrainStandardMaterial = (props: Props) => {
         // prettier-ignore
         ``
     )
+
+    // append after #include <dithering_fragment>
+    shader.fragmentShader = shader.fragmentShader.replace(
+      glsl`#include <dithering_fragment>`,
+      glsl`#include <dithering_fragment>\ngl_FragColor = vec4(vWorldPosition, 1.0);`
+    )
   }
 
   useEffect(() => {

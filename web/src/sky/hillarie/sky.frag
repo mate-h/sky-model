@@ -26,22 +26,13 @@ void RenderRayMarchingPS(in vec2 pixPos, out vec4 fragColor) {
 
   AtmosphereParameters Atmosphere = GetAtmosphereParameters();
 
+  // HLSL clip space has a reversed Y axis compared to OpenGL.
   // vec3 ClipSpace = vec3((pixPos / vec2(iResolution)) * vec2(2.0, -2.0) - vec2(1.0, -1.0), 1.0);
-  // vec4 HViewPos = iCameraProjectionInverse * vec4(ClipSpace, 1.0);
-  // vec3 WorldDir = normalize(mat3(iCameraWorld) * HViewPos.xyz / HViewPos.w);
-  // vec3 WorldPos = cameraPosition + vec3(0, 0, Atmosphere.BottomRadius);
-
-  vec3 WorldDir, WorldPos;
-  cameraRay(WorldPos, WorldDir);
-  // WorldPos /= 1000.0;
-  WorldPos += vec3(0, Atmosphere.BottomRadius, 0);
-
-  fragColor.rgb += vec3(checker(WorldDir)*0.06);
-
-  // fragColor = vec4(vec3(checker(WorldDir)*0.06), 1.0);
-  // fragColor = vec4((WorldDir * 0.5) + 0.5, 1.0); 
-  // fragColor = vec4(WorldPos, 1.0);
-  // return;
+  vec3 ClipSpace = vec3((pixPos / vec2(iResolution)) * vec2(2.0, 2.0) - vec2(1.0, 1.0), 1.0);
+  vec4 HViewPos = iCameraProjectionInverse * vec4(ClipSpace, 1.0);
+  vec3 WorldDir = normalize(mat3(iCameraWorld) * (HViewPos.xyz / HViewPos.w));
+  const float posScalar = 1.0/1.0;
+  vec3 WorldPos = cameraPosition*posScalar + vec3(0, Atmosphere.BottomRadius, 0);
 
   float DepthBufferValue = -1.0;
 
@@ -53,7 +44,10 @@ void RenderRayMarchingPS(in vec2 pixPos, out vec4 fragColor) {
 
   float viewHeight = length(WorldPos);
   vec3 L = vec3(0.);
-  // DepthBufferValue = ViewDepthTexture[pixPos].r;
+  vec4 worldPosSample = texture(iDepthBuffer, pixPos / vec2(iResolution));
+  if (worldPosSample.a > 0.) {
+    DepthBufferValue = length(worldPosSample.xyz - cameraPosition);
+  }
 #if FASTSKY_ENABLED
   if(viewHeight < Atmosphere.TopRadius && DepthBufferValue == 1.0) {
     vec2 uv;
@@ -86,10 +80,10 @@ void RenderRayMarchingPS(in vec2 pixPos, out vec4 fragColor) {
 #error The FASTAERIALPERSPECTIVE_ENABLED path does not support COLORED_TRANSMITTANCE_ENABLED.
 #else
 
-  ClipSpace = vec3((pixPos / vec2(iResolution)) * vec2(2.0, -2.0) - vec2(1.0, -1.0), DepthBufferValue);
+  ClipSpace = vec3((pixPos / vec2(iResolution)) * vec2(2.0, 2.0) - vec2(1.0, 1.0), DepthBufferValue);
   vec4 DepthBufferWorldPos = mul(iCameraProjectionInverse, vec4(ClipSpace, 1.0));
   DepthBufferWorldPos /= DepthBufferWorldPos.w;
-  float tDepth = length(DepthBufferWorldPos.xyz - (WorldPos + vec3(0.0, 0.0, -Atmosphere.BottomRadius)));
+  float tDepth = length(DepthBufferWorldPos.xyz - (WorldPos + vec3(0.0, -Atmosphere.BottomRadius, 0.0)));
   float Slice = AerialPerspectiveDepthToSlice(tDepth);
   float Weight = 1.0;
   if(Slice < 0.5) {
@@ -140,9 +134,10 @@ void RenderRayMarchingPS(in vec2 pixPos, out vec4 fragColor) {
 
   fragColor = outputLuminance;
   fragColor.rgb = ss.L;
+  // fragColor.rgb = ss.Transmittance;
+  // fragColor.rgb = ss.MultiScatAs1;
   // fragColor.rgb += vec3(checker(WorldDir)*0.01);
 
-  // fragColor.rgb = ss.Transmittance;
   fragColor.a = 1.0;
 }
 

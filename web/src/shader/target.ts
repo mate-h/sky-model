@@ -2,9 +2,11 @@ import { useThree } from '@react-three/fiber'
 import { useMemo } from 'react'
 import {
   ClampToEdgeWrapping,
+  DepthTexture,
   HalfFloatType,
   LinearFilter,
   RGBAFormat,
+  RenderTargetOptions,
   WebGL3DRenderTarget,
   WebGLMultipleRenderTargets,
   WebGLRenderTarget,
@@ -16,17 +18,21 @@ export function useRenderTarget({
   width,
   height,
 }: RenderTargetProps = {}) {
-  const opts = {
-    type: HalfFloatType,
-  }
   const { size, viewport } = useThree()
+  let w = size.width * viewport.dpr * scalar
+  let h = size.height * viewport.dpr * scalar
+  if (width) w = width
+  if (height) h = height
+  
   return useMemo(() => {
-    let w = size.width * viewport.dpr * scalar
-    let h = size.height * viewport.dpr * scalar
-    if (width) w = width
-    if (height) h = height
+    const depthTexture = new DepthTexture(w, h)
+    depthTexture.type = HalfFloatType
+    const opts: RenderTargetOptions = {
+      type: HalfFloatType,
+      depthTexture: depthTexture,
+    }
     return new WebGLRenderTarget(w, h, opts)
-  }, [size, viewport])
+  }, [w, h])
 }
 
 type MultiRenderTargetProps = {
