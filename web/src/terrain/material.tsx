@@ -84,6 +84,7 @@ type Props = SkyContext & {
   // albedoTexture: Texture | undefined
 
   mapTile: MapTile
+  outputPosition?: boolean
 }
 
 const loader = new TextureLoader()
@@ -150,6 +151,7 @@ export const TerrainStandardMaterial = (props: Props) => {
   const state = useThree()
   function onBeforeCompile(shader: Shader) {
     shaderRef.current = shader
+    return;
 
     // console.log(shader.fragmentShader);
 
@@ -159,27 +161,26 @@ export const TerrainStandardMaterial = (props: Props) => {
     const u = getUniforms(state)
     shader.uniforms = { ...shader.uniforms, ...u }
     shader.vertexShader = shader.vertexShader.replace(
-      glsl`#define STANDARD\n`,
-      glsl`#define STANDARD\n#define USE_TRANSMISSION\n` +
-        // prettier-ignore
-        ``
+      `#define STANDARD\n`,
+      `#define STANDARD\n#define USE_TRANSMISSION\n`
     )
     shader.fragmentShader = shader.fragmentShader.replace(
-      glsl`void main() {`,
-      glsl`${pbrFrag}\nvoid main() {`
-    )
-    shader.fragmentShader = shader.fragmentShader.replace(
-      glsl`#include <opaque_fragment>`,
-      glsl`applySkyLighting(diffuseColor.rgb, normal, outgoingLight);\n  #include <opaque_fragment>` +
-        // prettier-ignore
-        ``
+      `void main() {`,
+      `${pbrFrag}\nvoid main() {`
     )
 
-    // append after #include <dithering_fragment>
-    shader.fragmentShader = shader.fragmentShader.replace(
-      glsl`#include <dithering_fragment>`,
-      glsl`#include <dithering_fragment>\ngl_FragColor = vec4(vWorldPosition, 1.0);`
-    )
+    if (!props.outputPosition) {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        `#include <opaque_fragment>`,
+        `applySkyLighting(diffuseColor.rgb, normal, outgoingLight);\n  #include <opaque_fragment>`
+      )
+    } else {
+      // append after #include <dithering_fragment>
+      shader.fragmentShader = shader.fragmentShader.replace(
+        `#include <dithering_fragment>`,
+        `#include <dithering_fragment>\ngl_FragColor = vec4(diffuseColor.rgb, 1.0);\n`
+      )
+    }
   }
 
   useEffect(() => {
@@ -222,6 +223,9 @@ export const TerrainStandardMaterial = (props: Props) => {
         displacementMap={heightMap.texture}
         normalMap={normalMap.texture}
         map={albedoTexture}
+        roughness={1}
+        metalness={0}
+        color="white"
       />
       {/* <meshNormalMaterial
         

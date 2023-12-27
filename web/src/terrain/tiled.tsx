@@ -43,7 +43,7 @@ function TerrainTile({
   // dynamic LOD
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
-      <mesh position={position}>
+      <mesh position={position} castShadow receiveShadow>
         <planeGeometry args={[s, s, res, res]} />
 
         <TerrainStandardMaterial
@@ -53,6 +53,7 @@ function TerrainTile({
           sunDirection={sunDirection}
           multiScattering={multiScattering}
           mapTile={mapTile}
+          outputPosition
         />
       </mesh>
     </group>
@@ -89,7 +90,7 @@ export function Terrain(ctx: SkyContext) {
     s.camera.right = 24
     s.mapSize.width = 1024
     s.mapSize.height = 1024
-    lightRef.current!.position.copy(sunDirection)
+    lightRef.current!.position.copy(sunDirection).multiplyScalar(10)
   })
   return (
     <>

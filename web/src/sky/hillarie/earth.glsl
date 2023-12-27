@@ -9,7 +9,7 @@ AtmosphereParameters GetAtmosphereParameters() {
 
   info.BottomRadius = EarthBottomRadius;
   info.TopRadius = EarthTopRadius;
-  info.GroundAlbedo = vec3(0.);
+  info.GroundAlbedo = vec3(1.);
 
   info.RayleighDensityExpScale = -1.0 / EarthRayleighScaleHeight;
   info.RayleighScattering = vec3(0.005802, 0.013558, 0.033100);

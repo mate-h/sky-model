@@ -1,7 +1,7 @@
 import { OrbitControls } from '@react-three/drei'
 import { Sky } from '.'
 import Controls from '../controls'
-import { Terrain } from '../terrain/shaded'
+import { Terrain } from '../terrain/tiled'
 import { useRef } from 'react'
 import { Data3DTexture, Texture, Vector3 } from 'three'
 

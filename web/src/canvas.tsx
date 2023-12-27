@@ -1,8 +1,8 @@
-import { Loader } from '@react-three/drei'
+import { Loader, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 // @ts-ignore
 import WebGPURenderer from 'three/addons/renderers/webgpu/WebGPURenderer.js'
-import { PCFShadowMap } from 'three'
+import { VSMShadowMap } from 'three'
 
 import { TerrainGlobe } from './terrain/globe'
 import VolumeScene from './volume/scene'
@@ -52,9 +52,9 @@ export default function () {
     <>
       <Canvas
         shadows={{
-          type: PCFShadowMap,
+          enabled: true,
         }}
-        camera={{ position: [2, 5, 15], far: 10000 }}
+        camera={{ position: [0, 4, 13], far: 10000 }}
         gl={{
           debug: {
             checkShaderErrors: true,
@@ -62,6 +62,9 @@ export default function () {
           },
         }}
       >
+
+        <OrbitControls makeDefault target={[0,2,0]} />
+
         <Controls />
 
         <Debug />

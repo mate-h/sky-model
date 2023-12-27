@@ -63,6 +63,8 @@ uniform vec3 iSunDirection;
 uniform float MultiScatteringLUTRes;
 uniform float iValue;
 uniform sampler2D iDepthBuffer;
+const vec3 SunLuminance = vec3(1000000.0); // arbitrary. But fine, not use when comparing the models
+uniform sampler2D iSceneTexture;
 
 struct AtmosphereParameters {
 	// Radius of the planet (center to ground)
@@ -204,6 +206,7 @@ vec3 GetSunLuminance(vec3 WorldPos, vec3 WorldDir, float PlanetRadius) {
 		if(t < 0.0) // no intersection
 		{
 			const vec3 SunLuminance = vec3(1000000.0); // arbitrary. But fine, not use when comparing the models
+			// const vec3 SolarIrradiance = vec3(1.474000, 1.850400, 1.911980);
 			return SunLuminance;
 		}
 	}
@@ -225,4 +228,14 @@ bool MoveToTopAtmosphere(inout vec3 WorldPos, in vec3 WorldDir, in float Atmosph
 		}
 	}
 	return true; // ok to start tracing
+}
+
+vec3 GetTransmittanceToSun(AtmosphereParameters Atmosphere, vec3 P) {
+	float pHeight = length(P);
+	vec3 UpVector = P / pHeight;
+	float SunZenithCosAngle = dot(iSunDirection, UpVector);
+	vec2 uv;
+	LutTransmittanceParamsToUv(Atmosphere, pHeight, SunZenithCosAngle, uv);
+	vec3 TransmittanceToSun = texture(iTransmittance, uv).rgb;
+	return TransmittanceToSun;
 }

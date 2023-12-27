@@ -20,7 +20,7 @@ export const Debug = () => {
           })
         }
       />
-      <axesHelper args={[10]} position={[0, 3.01, 0]} />
+      <axesHelper args={[1]} position={[0, 0.01, 0]} />
     </>
   )
 }

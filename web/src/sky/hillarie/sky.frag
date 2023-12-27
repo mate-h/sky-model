@@ -44,10 +44,15 @@ void RenderRayMarchingPS(in vec2 pixPos, out vec4 fragColor) {
 
   float viewHeight = length(WorldPos);
   vec3 L = vec3(0.);
+  vec3 sceneColor = texture(iSceneTexture, pixPos / vec2(iResolution)).rgb;
+  #if 0
   vec4 worldPosSample = texture(iDepthBuffer, pixPos / vec2(iResolution));
   if (worldPosSample.a > 0.) {
     DepthBufferValue = length(worldPosSample.xyz - cameraPosition);
   }
+  #else 
+  DepthBufferValue = texture(iDepthBuffer, pixPos / vec2(iResolution)).r;
+  #endif
 #if FASTSKY_ENABLED
   if(viewHeight < Atmosphere.TopRadius && DepthBufferValue == 1.0) {
     vec2 uv;
@@ -119,6 +124,8 @@ void RenderRayMarchingPS(in vec2 pixPos, out vec4 fragColor) {
   const bool MieRayPhase = true;
   SingleScatteringResult ss = IntegrateScatteredLuminance(pixPos, WorldPos, WorldDir, iSunDirection, Atmosphere, ground, SampleCountIni, DepthBufferValue, VariableSampleCount, MieRayPhase, defaultTMaxMax, iResolution);
 
+  L *= ss.Transmittance;
+  // L = vec3(0.);
   L += ss.L;
   vec3 throughput = ss.Transmittance;
 
@@ -133,7 +140,20 @@ void RenderRayMarchingPS(in vec2 pixPos, out vec4 fragColor) {
 #endif // FASTAERIALPERSPECTIVE_ENABLED
 
   fragColor = outputLuminance;
-  fragColor.rgb = ss.L;
+  if (DepthBufferValue >= 0.) {
+    vec3 litScene = texture(iSceneTexture, pixPos / vec2(iResolution)).rgb;
+    float depthNDCZ = DepthBufferValue * 2.0 - 1.0; // Convert to NDC Z
+    vec4 ndc = vec4((pixPos / iResolution.xy) * 2.0 - 1.0, depthNDCZ, 1.0);
+    vec4 worldPos = iCameraWorld * iCameraProjectionInverse * ndc;
+    worldPos /= worldPos.w;
+    float tDepth = length(worldPos.xyz - (WorldPos + vec3(0.0, -Atmosphere.BottomRadius, 0.0)));
+    vec3 P = WorldPos + tDepth * WorldDir;
+    vec3 TransmittanceToSun = GetTransmittanceToSun(Atmosphere, P);
+    L += TransmittanceToSun * throughput * litScene;
+    // L = TransmittanceToSun;
+  }
+  
+  fragColor.rgb = L;
   // fragColor.rgb = ss.Transmittance;
   // fragColor.rgb = ss.MultiScatAs1;
   // fragColor.rgb += vec3(checker(WorldDir)*0.01);

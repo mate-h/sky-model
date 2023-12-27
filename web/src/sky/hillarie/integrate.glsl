@@ -58,8 +58,6 @@ SingleScatteringResult IntegrateScatteredLuminance(
     }
   }
 
-  // tMax = 100.;
-
   if(DepthBufferValue >= 0.0) {
     ClipSpace.z = DepthBufferValue;
     if(ClipSpace.z < 1.0) {
@@ -67,12 +65,18 @@ SingleScatteringResult IntegrateScatteredLuminance(
       DepthBufferWorldPos /= DepthBufferWorldPos.w;
 
       float tDepth = length(DepthBufferWorldPos.xyz - (WorldPos + vec3(0.0, -Atmosphere.BottomRadius, 0.0))); // apply earth offset to go back to origin as top of earth mode. 
+      // tMax = min(tMax, tDepth);
+
+      // new calculation (fixes bug with sinking geometry)
+      float depthNDCZ = DepthBufferValue * 2.0 - 1.0; // Convert to NDC Z
+      vec4 ndc = vec4((pixPos / resolution.xy) * 2.0 - 1.0, depthNDCZ, 1.0);
+      vec4 worldPos = iCameraWorld * iCameraProjectionInverse * ndc;
+      worldPos /= worldPos.w;
+      tDepth = length(worldPos.xyz - (WorldPos + vec3(0.0, -Atmosphere.BottomRadius, 0.0))); // apply earth offset to go back to origin as top of earth mode. 
       tMax = min(tMax, tDepth);
       // result.L = vec3(tDepth);
       // return result;
     }
-    // temporary
-    tMax = DepthBufferValue;
       // if (VariableSampleCount && ClipSpace.z == 1.0f)
       //     return result;
   }
@@ -213,20 +217,16 @@ SingleScatteringResult IntegrateScatteredLuminance(
 
     tPrev = t;
   }
-
+  
   if(ground && tMax == tBottom && tBottom > 0.0) {
     // Account for bounced light off the earth
     vec3 P = WorldPos + tBottom * WorldDir;
     float pHeight = length(P);
-
     vec3 UpVector = P / pHeight;
-    float SunZenithCosAngle = dot(SunDir, UpVector);
-    vec2 uv;
-    LutTransmittanceParamsToUv(Atmosphere, pHeight, SunZenithCosAngle, uv);
-    vec3 TransmittanceToSun = texture(iTransmittance, uv).rgb;
-
     float NdotL = clamp(dot(normalize(UpVector), normalize(SunDir)), 0.0, 1.0);
-    L += globalL * TransmittanceToSun * throughput * NdotL * Atmosphere.GroundAlbedo / PI;
+    vec3 albedo = Atmosphere.GroundAlbedo;
+    vec3 TransmittanceToSun = GetTransmittanceToSun(Atmosphere, P);
+    L += globalL * TransmittanceToSun * throughput * NdotL * albedo / PI;
   }
 
   result.L = L;
